@@ -1,7 +1,17 @@
 '''
+
 Outline for client program (See page 5 of assignment page)
-Q: ask prof L if actions are correct
+
 '''
+
+import boto3
+# import botocore.credentials
+
+# Global variables
+s3 = boto3.resource('s3')
+ec2 = boto3.resource('ec2')
+block_size = 64                 # 64 MB
+replication_factor = 3
 
 
 def greetings():
@@ -11,7 +21,7 @@ def greetings():
 
 
 def bye():
-    print("\nThanks for Dunder Mifflin. Bye!\n")
+    print("\nThanks for visiting Dunder Mifflin. Bye!\n")
 
 
 def action_list():
@@ -31,9 +41,26 @@ def action_list():
 
 
 def create_file():
+
     print("\nTo implement: Creating file...\n")
-    # TODO: get user input/validate input for which s3 object to use. (Data from this s3 obj written into file)
-    # Do we need to get file size from user? Or is file size with s3 object?
+
+    # get name of S3 object to create in SUFS -- TODO: validate user input
+    # bucket = input("Enter an S3 object: ")              # s3 bucket name: dundermifflin-sufs
+    bucket = 'dundermifflin-sufs'                       # hard coded for now
+    key = 'sample_us.tsv'                               # hard coded for now - this is the only file in the bucket now
+
+    s3obj = s3.Object(bucket, key)                      # var that represents an s3 object
+    # data = s3obj.get()['Body'].read().decode('utf-8')
+    # print(data)
+
+    # Save file size in bytes
+    size = s3obj.content_length
+
+    # Send filename and file size to NameNode
+
+    # Get response from NameNode with block list and DN list -- TODO: handle situation if filename is already in use
+
+    # Forward block data to each DN in the DN List
 
 
 def read_file():
@@ -49,6 +76,10 @@ def list_data_node():
 
 
 def main():
+
+    # Print out bucket names
+    for bucket in s3.buckets.all():
+        print(bucket.name)
 
     greetings()
 
