@@ -50,8 +50,8 @@ def create_file():
     key = 'sample_us.tsv'                               # hard coded for now - this is the only file in the bucket now
 
     s3obj = s3.Object(bucket, key)                      # var that represents an s3 object
-    # data = s3obj.get()['Body'].read().decode('utf-8')
-    # print(data)
+    data = s3obj.get()['Body'].read().decode('utf-8')
+    print(data)
 
     # Save file size in bytes
     size = s3obj.content_length
@@ -76,10 +76,6 @@ def list_data_node():
 
 
 def main():
-
-    # Print out bucket names
-    for bucket in s3.buckets.all():
-        print(bucket.name)
 
     greetings()
 
