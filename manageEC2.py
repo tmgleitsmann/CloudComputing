@@ -32,5 +32,3 @@ def create_instance(image_id, num_of_instances):
 
 def terminate_instances(instances):
     ec2.instances.filter(InstanceIds=instances).terminate()
-
-
