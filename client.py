@@ -28,7 +28,7 @@ def action_list():
     options = """\nChoose an action 1-4:\n
     1: Create file in SUFS
     2: Read file
-    3: List Data Nodes that store replicas of each block of file 
+    3: List Data Nodes that store replicas of each block of file
     4: Exit program\n"""
     print(options)
 

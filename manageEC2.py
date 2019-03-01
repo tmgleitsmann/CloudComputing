@@ -21,7 +21,10 @@ def create_instance(image_id, num_of_instances):
                                         'MarketType': 'spot',
                                         'SpotOptions': {
                                             'MaxPrice': '0.012'}})
+
     print("Instance created!")
+
+   # Do Something
     # global my_instances = instances
     return instances
 

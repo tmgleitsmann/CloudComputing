@@ -21,4 +21,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('sufs_app/', include('sufs_app.urls')),
     path('cli_app/', include('cli_app.urls')),
+    path('NN_app/', include('NN_app.urls')),
+    path('DN_app/', include('DN_app.urls'))
 ]
