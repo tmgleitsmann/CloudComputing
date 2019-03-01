@@ -6,13 +6,13 @@ Outline for client program (See page 5 of assignment page)
 
 import boto3
 # import botocore.credentials
-
+import sufs.cli_app.views
 # Global variables
 s3 = boto3.resource('s3')
 ec2 = boto3.resource('ec2')
 block_size = 64                 # 64 MB
 replication_factor = 3
-
+NNAddress = '127.0.0.1'
 
 def greetings():
     print("\n---------------------------------------------")
@@ -55,9 +55,10 @@ def create_file():
 
     # Save file size in bytes
     size = s3obj.content_length
+    #print(size)
 
     # Send filename and file size to NameNode
-
+    print(sufs.cli_app.views.post_NN('request-param-should-go-here', size, data, NNAddress))
     # Get response from NameNode with block list and DN list -- TODO: handle situation if filename is already in use
 
     # Forward block data to each DN in the DN List
