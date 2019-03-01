@@ -3,9 +3,12 @@ from django.http import HttpResponse
 
 # Create your views here.
 def cli_home(request):
-    # cli_message = "hello from the client!"
-    # data = {'foo':'bar'}
-    data = "some cool data"
+
+    data = request.META
+
+    # # cli_message = "hello from the client!"
+    # # data = {'foo':'bar'}
+    # data = "some cool data"
     return HttpResponse(data)
 
 
