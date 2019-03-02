@@ -7,12 +7,13 @@ Outline for client program (See page 5 of assignment page)
 import boto3
 # import botocore.credentials
 import sufs.cli_app.views
+import requests
 # Global variables
 s3 = boto3.resource('s3')
 ec2 = boto3.resource('ec2')
 block_size = 64                 # 64 MB
 replication_factor = 3
-NNAddress = '127.0.0.1'
+NNAddress = '127.0.0.1' #This is hardcoded in for now. Client should know NN IP
 
 def greetings():
     print("\n---------------------------------------------")
@@ -58,7 +59,8 @@ def create_file():
     #print(size)
 
     # Send filename and file size to NameNode
-    print(sufs.cli_app.views.post_NN('request-param-should-go-here', size, data, NNAddress))
+    #print(sufs.cli_app.views.post_NN(requests, size, data, NNAddress))
+    sufs.cli_app.views.post_NN(requests, size, data, NNAddress)
     # Get response from NameNode with block list and DN list -- TODO: handle situation if filename is already in use
 
     # Forward block data to each DN in the DN List
