@@ -20,9 +20,9 @@ def post(request):
 	#define what happens during route call.
 	return HttpResponse('<h1>Cli POST<h1>')
 
-def post_NN(request, size, data1, NNIPAdress):
+def post_NN(request, size, data1, NNIPAddress):
 	#we need a post request from here to the NN.
-	
+	callback_val = request.post(NNIPAddress, data1)
 	#we want to await a response before we return a value to client.py
-	return 'sufs.cli_app.views.post_NN() was called upon'
+	return callback_val
 # Create your views here.
