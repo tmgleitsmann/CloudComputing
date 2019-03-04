@@ -1,19 +1,17 @@
-'''
-
-Outline for client program (See page 5 of assignment page)
-
-'''
-
-import boto3
-# import botocore.credentials
-import sufs.cli_app.views
 import requests
+import boto3
+import json
+import pprint
+
+# import botocore.credentials
+
 # Global variables
 s3 = boto3.resource('s3')
 ec2 = boto3.resource('ec2')
-block_size = 64                 # 64 MB
+block_size = 64                     # MB
 replication_factor = 3
-NNAddress = '127.0.0.1' #This is hardcoded in for now. Client should know NN IP
+NN_IP = "http://127.0.0.1"      # hard coded for now
+port = "5000"                   # hard coded for now
 
 def greetings():
     print("\n---------------------------------------------")
@@ -27,7 +25,7 @@ def bye():
 
 def action_list():
     options = """\nChoose an action 1-4:\n
-    1: Create file in SUFS
+    1: Create/write file in SUFS
     2: Read file
     3: List Data Nodes that store replicas of each block of file
     4: Exit program\n"""
@@ -43,27 +41,55 @@ def action_list():
 
 def create_file():
 
-    print("\nTo implement: Creating file...\n")
+    print("\n------")
+    print("WRITE")
+    print("------\n")
 
     # get name of S3 object to create in SUFS -- TODO: validate user input
     # bucket = input("Enter an S3 object: ")              # s3 bucket name: dundermifflin-sufs
     bucket = 'dundermifflin-sufs'                       # hard coded for now
     key = 'sample_us.tsv'                               # hard coded for now - this is the only file in the bucket now
-
     s3obj = s3.Object(bucket, key)                      # var that represents an s3 object
-    data = s3obj.get()['Body'].read().decode('utf-8')
-    print(data)
+    s3_obj_str = s3obj.get()['Body'].read().decode('utf-8')
+    print(len(s3_obj_str))
 
-    # Save file size in bytes
+    # Save save file name and file size into json object
+    filename = key
     size = s3obj.content_length
-    #print(size)
+    data_json = json.dumps({filename: size})
 
-    # Send filename and file size to NameNode
-    #print(sufs.cli_app.views.post_NN(requests, size, data, NNAddress))
-    sufs.cli_app.views.post_NN(requests, size, data, NNAddress)
+    # Send json object to NameNode
+    POST(data_json, NN_IP)                            # have this return a json and use that json to send to DNs
+    with open('DNList.json') as json_data:            # TODO: get DN list from NN here
+        DN_list = json.load(json_data)
+
     # Get response from NameNode with block list and DN list -- TODO: handle situation if filename is already in use
-
     # Forward block data to each DN in the DN List
+    block_json = DN_list[key]                           # get everything but the filename
+    key_list = block_json.keys()                        # list of block names
+    file_in_blocks = get_file_in_blocks(s3_obj_str)     # list of file contents in 64B strings
+    print(len)
+    i = 0;                                              # index of file_in_blocks
+
+    for key in key_list:
+        print("Sending block ", key, "to data nodes: ")
+        block_str = file_in_blocks[i]
+        i = i + 1
+
+        for dn in block_json[key]:
+            block_for_DN = json.dumps({key: block_str})         # convert string to json
+            print(dn, " ---> ", end = '')
+            print (block_for_DN)
+            POST(block_for_DN, NN_IP)                           # TODO: change this to DN_IP!!!
+        print("---")
+
+
+def get_file_in_blocks(file_str):
+    file_in_blocks = []
+    for block in range(0, len(file_str), block_size):
+        str = file_str[block:block+block_size]
+        file_in_blocks.append(str)
+    return file_in_blocks
 
 
 def read_file():
@@ -77,31 +103,65 @@ def list_data_node():
     print("\nTo implement: Listing data nodes that store replicas of each block of file...\n")
     # TODO: get user input/validate input for which file they want info for
 
+    # print("\File: ", key)         # where the key is the filename
+    # for key in key_list:
+    #     print(key,": " , end = '')
+    #     for dn in block_json[key]:
+    #         print(dn, " ", end = '')
+    #     print()
+    # print("\n")
+
+
+def GET_from_NN():
+    response = requests.get(NN_IP + ":" + port)
+    if response.status_code != 200:             # is supposed to return a JSON
+        print("non 200 response - ERROR")
+    else:
+        print(response.json())
+
+
+def POST(data, IP):
+    # data = {"filename": "text.txt"}
+    response = requests.post(IP + ":" + port, json=data)
+    if response.status_code != 200:             # is supposed to return a JSON
+        print("non 200 response - ERROR")
+    else:
+        print("successfully posted :) ")
+
 
 def main():
 
-    greetings()
+    create_file()
 
-    # Loop until user quits with action #4
-    while True:
+    # greetings()
+    #
+    # # Loop until user quits with action #4
+    # while True:
+    #
+    #     # print action selection list
+    #     action = action_list()
+    #
+    #     if action is "1":
+    #         create_file()
+    #
+    #     elif action is "2":
+    #         read_file()
+    #
+    #     elif action is "3":
+    #         list_data_node()
+    #
+    #     else:
+    #         break
+    #
+    # # Quit program
+    # bye()
 
-        # print action selection list
-        action = action_list()
 
-        if action is "1":
-            create_file()
-
-        elif action is "2":
-            read_file()
-
-        elif action is "3":
-            list_data_node()
-
-        else:
-            break
-
-    # Quit program
-    bye()
+    # print("calling GET_from_NN()...")
+    # GET_from_NN()
+    #
+    # print("calling PUT_to_NN()...")
+    # PUT_to_NN()
 
 
 if __name__ == "__main__":
