@@ -1,34 +1,107 @@
+'''
+
+Outline for client program (See page 5 of assignment page)
+
+'''
+
+import boto3
+# import botocore.credentials
+import sufs.cli_app.views
 import requests
+# Global variables
+s3 = boto3.resource('s3')
+ec2 = boto3.resource('ec2')
+block_size = 64                 # 64 MB
+replication_factor = 3
+NNAddress = '127.0.0.1' #This is hardcoded in for now. Client should know NN IP
 
-localhost = "http://127.0.0.1"
-port = "5000"
+def greetings():
+    print("\n---------------------------------------------")
+    print("Welcome to the Dunder Mifflin Client Program!")
+    print("---------------------------------------------\n")
 
 
-def GET_from_NN():
-    response = requests.get(localhost + ":" + port)
-    if response.status_code != 200:             # is supposed to return a JSON
-        print("non 200 response - ERROR")
-    else:
-        print(response.json())
+def bye():
+    print("\nThanks for visiting Dunder Mifflin. Bye!\n")
 
 
-def PUT_to_NN():
-    data = {"filename": "text.txt"}
-    response = requests.post(localhost + ":" + port, json=data)
-    if response.status_code != 200:             # is supposed to return a JSON
-        print("non 200 response - ERROR")
-    else:
-        print("successfully posted :) ")
+def action_list():
+    options = """\nChoose an action 1-4:\n
+    1: Create file in SUFS
+    2: Read file
+    3: List Data Nodes that store replicas of each block of file
+    4: Exit program\n"""
+    print(options)
+
+    selection = input("Please choose an action 1-4: ")
+
+    while selection not in ('1', '2', '3', '4'):
+        selection = input("Please choose an action 1-4: ")
+
+    return selection
+
+
+def create_file():
+
+    print("\nTo implement: Creating file...\n")
+
+    # get name of S3 object to create in SUFS -- TODO: validate user input
+    # bucket = input("Enter an S3 object: ")              # s3 bucket name: dundermifflin-sufs
+    bucket = 'dundermifflin-sufs'                       # hard coded for now
+    key = 'sample_us.tsv'                               # hard coded for now - this is the only file in the bucket now
+
+    s3obj = s3.Object(bucket, key)                      # var that represents an s3 object
+    data = s3obj.get()['Body'].read().decode('utf-8')
+    print(data)
+
+    # Save file size in bytes
+    size = s3obj.content_length
+    #print(size)
+
+    # Send filename and file size to NameNode
+    #print(sufs.cli_app.views.post_NN(requests, size, data, NNAddress))
+    sufs.cli_app.views.post_NN(requests, size, data, NNAddress)
+    # Get response from NameNode with block list and DN list -- TODO: handle situation if filename is already in use
+
+    # Forward block data to each DN in the DN List
+
+
+def read_file():
+    print("\nTo implement: Read file...\n")
+    # TODO: get user input/validate input for which filename user wants to read
+    # TODO: send file name to NN
+    # TODO: Receive copy of file from NN
+
+
+def list_data_node():
+    print("\nTo implement: Listing data nodes that store replicas of each block of file...\n")
+    # TODO: get user input/validate input for which file they want info for
 
 
 def main():
-    print ("Hello World!")
 
-    print("calling GET_from_NN()...")
-    GET_from_NN()
+    greetings()
 
-    print("calling PUT_to_NN()...")
-    PUT_to_NN()
+    # Loop until user quits with action #4
+    while True:
+
+        # print action selection list
+        action = action_list()
+
+        if action is "1":
+            create_file()
+
+        elif action is "2":
+            read_file()
+
+        elif action is "3":
+            list_data_node()
+
+        else:
+            break
+
+    # Quit program
+    bye()
 
 
 if __name__ == "__main__":
