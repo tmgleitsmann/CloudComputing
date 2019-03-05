@@ -2,22 +2,22 @@ import requests
 import boto3
 import json
 import pprint
+from botocore.exceptions import ClientError
 
 
 # Global variables
 s3 = boto3.resource('s3')
 ec2 = boto3.resource('ec2')
-block_size = 64                     # MB
-replication_factor = 3
-NN_IP = "http://127.0.0.1"          # hard coded for now
-port = "5000"                       # hard coded for now
+block_size = 4000                     # MB                      # CHANGE THIS BACK TO 64
+replication_factor = 1
+NN_addr = "http://127.0.0.1:5000"     # hard coded for now
+# port = "5000"                       # hard coded for now
 
-port1 = "6000"
-port2 = "7000"                       # hard coded for now
-port3 = "8000"                       # hard coded for now
+# port1 = "6000"
+# port2 = "7000"                       # hard coded for now
+# port3 = "8000"                       # hard coded for now
 
-ports = [port1, port2, port3]
-
+# ports = [port1, port2, port3]
 
 
 def greetings():
@@ -53,64 +53,52 @@ def create_file():
     print("------\n")
 
     # get name of S3 object to create in SUFS -- TODO: validate user input
-    # bucket = input("Enter an S3 object: ")                # s3 bucket name: dundermifflin-sufs
-    bucket = 'dundermifflin-sufs'                           # hard coded for now
-    key = 'sample_us.tsv'                                   # hard coded for now - this is the only file in the bucket now
-    s3obj = s3.Object(bucket, key)                          # var that represents an s3 object
-    s3_obj_str = s3obj.get()['Body'].read().decode('utf-8') # data from s3 as a string
+    # bucket = input("Enter an S3 object: ")                    # s3 bucket name: dundermifflin-sufs
+    bucket = 'dundermifflin-sufs'                               # hard coded for now
+    key = 'sample_us.tsv'                                       # hard coded for now - this is the only file in the bucket now
+    s3obj = s3.Object(bucket, key)                              # var that represents an s3 object
+    s3_obj_str = s3obj.get()['Body'].read().decode('utf-8')     # data from s3 as a string
 
     # Save save file name and file size into json object
     filename = key
     size = s3obj.content_length
-    file_dict = {
-        "filename": filename,
-        "filesize": size
-    }
-    data_json = json.dumps(file_dict)                       # convert file info dict into json
+    file_dict = {"filename": filename,"filesize": size}
+    data_json = json.dumps(file_dict)                           # convert file info dict into json
+
+    print("Sending file info for WRITE to Name Node:")
+    print("  - File name: ", filename)
+    print("  - File size: ", size, "\n")
 
     # Send json object to NameNode and get DN list back as a response
-    response = POST(data_json, NN_IP, port)                 # POST the file name and size to NN
-    # my_DN_list = json.loads(response.content)
-    my_DN_list = json.loads(json.loads(response.content.decode("utf-8")))   # DN list as a dict
+    response = POST(data_json, NN_addr)                         # POST the file name and size to NN
 
-    list_data_node(my_DN_list)
+    # check if file already exists (if exists, print error and return)
+    if response == "ERROR":
+        print("ERROR: cannot write ", filename, "because it already exists.")
+        return
+    print("Received DN list from NN for file ", filename, "\n")
 
-    # print(my_DN_list)
-    # print(my_DN_list)
-    # print("\n", type(my_DN_list))
+    # Forward block data to each DN in the DN List
+    my_DN_dict = json.loads(json.loads(response.content.decode("utf-8")))   # DN list as a dict
+    list_data_node(my_DN_dict)
+    block_json = my_DN_dict[key]                                # get everything but the filename
+    key_list = block_json.keys()                                # list of block names
+    file_in_blocks = get_file_in_blocks(s3_obj_str)             # list of file contents in 64B strings
+    i = 0                                                       # index of file_in_blocks
 
-    # ***** WORKING HERE *******
-    # response = GET()                                        # GET the DN list from the NN
-    # if response == "ERROR":
-    #     print ("ERROR")
-    #     return
-    # else:
-    #     print("DN List from NameNode: ")
-    #     print(response, "\n")
-    #
-    #
-    # # Get response from NameNode with block list and DN list -- TODO: handle situation if filename is already in use
-    # # Forward block data to each DN in the DN List
-    # block_json = response[key]                           # get everything but the filename
-    # key_list = block_json.keys()                        # list of block names
-    # file_in_blocks = get_file_in_blocks(s3_obj_str)     # list of file contents in 64B strings
-    # # print(len)
-    # i = 0;                                              # index of file_in_blocks
-    #
-    # for key in key_list:
-    #     print("Sending block ", key, "to data nodes: ")
-    #     block_str = file_in_blocks[i]
-    #     i = i + 1
-    #
-    #     ip_index = 0                                            # temp for testing communication with DN locally
-    #     for dn in block_json[key]:
-    #         block_for_DN = json.dumps({key: block_str})         # convert string to json
-    #         print(dn, ":", ports[ip_index], " ---> ", end = '')
-    #         print(block_for_DN)
-    #         POST(block_for_DN, NN_IP, ports[ip_index])                 # TODO: change this to DN_IP!!!
-    #         ip_index = ip_index + 1
-    #         # POST(block_for_DN, NN_IP, NN_IP)                         # TODO: change this to DN_IP!!!
-    #     print("---")
+    for key in key_list:                                        # for each key (block ID)
+        print("Sending block ", key, "to data nodes: ")
+        block_str = file_in_blocks[i]                           # get next chunk of file (each chunk = blocked size)
+        i = i + 1
+
+        for dn in block_json[key]:                              # for each DN in the for this block
+            block_for_DN = json.dumps({key: block_str})         # convert string to json
+            print(dn, " ---> ", end = '')                       # dn represents the ip:port of DN
+            # print(block_for_DN)
+            # WORKING HERE!!!!
+            print(key)#(json.loads(block_for_DN))
+            POST(block_for_DN, dn)                              # TODO: change this to DN_IP!!!
+        print("-----------------------------------------------------")
 
 
 def get_file_in_blocks(file_str):
@@ -129,14 +117,14 @@ def read_file():
 
 
 def list_data_node(DN_list_dict):
-    print("\nTo implement: Listing data nodes that store replicas of each block of file...\n")
+
     # TODO: get user input/validate input for which file they want info for
 
     filename_keys = DN_list_dict.keys()
-    for filename in filename_keys:                          # this should only loop ONCE
-        print("----------------------------------")
-        print("DN LIST FOR FILE: ", filename)
-        print("----------------------------------")
+    for filename in filename_keys:                              # this should only loop ONCE
+        print("--------------------------------------------")
+        print("GET DN LIST FOR FILE: ", filename)
+        print("--------------------------------------------")
 
 
     block_list = []
@@ -151,29 +139,28 @@ def list_data_node(DN_list_dict):
 
 
 def GET():
-    response = requests.get(NN_IP + ":" + port)             # get the DN list from the NN
+    response = requests.get("http://127.0.0.1:5000/BB")         # get the DN list from the NN
     if response.status_code != 200:
         print("POST ERROR ", response)
         return "ERROR"
     else:
+        print(response.content)
         return response.json()
         # print(response.json())
 
 
-def POST(data, IP, port):
-    response = requests.post(IP + ":" + port, json=data)    # send data in form of JSON to NN
+def POST(data, addr):
+    response = requests.post(addr, json=data)                   # send data in form of JSON to NN
     if response.status_code != 200:
         print("POST ERROR ", response)
         return "ERROR"
     else:
         return response
-    # else:
-    #     print("Successfully posted :) ")
 
 
 def main():
 
-    create_file()
+    create_file()                                               # AKA write
 
     # greetings()
     #

@@ -2,6 +2,8 @@ from flask import Flask, jsonify
 from flask_restful import Api, Resource, reqparse, request
 import requests
 import json
+import datetime
+
 
 app = Flask(__name__)
 api = Api(app)
@@ -14,12 +16,13 @@ parser.add_argument('file')
 # DN lists
 
 # Temp variables
-DN_IP = ["10.0.0.1", "10.0.0.2", "10.0.0.3", "10.0.0.4", "10.0.0.5"]    # temp list of DN IPs -- FIX to heart beat list
+DN_IP = ["http://127.0.0.1:6000", "http://127.0.0.1:6001", "http://127.0.0.1:6002"]#, "127.0.0.1:6003", "127.0.0.1:6004"]    # temp list of DN IPs -- FIX to heart beat list
 master_DNlists_dict = {}                                                # master list of all DN lists
+master_heartbeat_dict = {}
 
 # NN Setup
-block_size = 64                                                         # TODO: change from B to MB
-replication_factor = 3
+block_size = 4000                                                         # TODO: change from B to MB
+replication_factor = 1
 
 
 class NN_server(Resource):
@@ -77,8 +80,26 @@ class NN_server(Resource):
         return json.dumps(DN_list_json_cli)                     # send the client version
 
 
+class BlockBeats(Resource):
 
-api.add_resource(NN_server, "/")                # do research on this add.resource
+    def get(self):
+        return "GET response from BlockBeats class"
+
+    def post(self):
+        bb = json.loads(request.data.decode("utf-8"))           # list of block id from a DN
+        block_list = bb["block_report"]                         # get list of blocks that this DN currently has
+
+        for block in block_list:
+            heartbeat_data = {block: datetime.datetime.now()}
+            master_heartbeat_dict.update(heartbeat_data)
+
+        print("master HB list: ")
+        for key in master_heartbeat_dict.keys():
+            print(key, ": ", master_heartbeat_dict[key])
+
+
+api.add_resource(NN_server, "/")
+api.add_resource(BlockBeats, "/BB")
 
 
 if __name__ == "__main__":
