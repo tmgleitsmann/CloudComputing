@@ -12,6 +12,13 @@ replication_factor = 3
 NN_IP = "http://127.0.0.1"          # hard coded for now
 port = "5000"                       # hard coded for now
 
+port1 = "6000"
+port2 = "7000"                       # hard coded for now
+port3 = "8000"                       # hard coded for now
+
+ports = [port1, port2, port3]
+
+
 
 def greetings():
     print("\n---------------------------------------------")
@@ -61,36 +68,49 @@ def create_file():
     }
     data_json = json.dumps(file_dict)                       # convert file info dict into json
 
-    # Send json object to NameNode
-    POST(data_json, NN_IP)                                  # POST the file name and size to NN
-    response = GET()                                        # GET the DN list from the NN
-    if response == "ERROR":
-        print ("ERROR")
-        return
-    else:
-        print("DN List from NameNode: ")
-        print(response, "\n")
+    # Send json object to NameNode and get DN list back as a response
+    response = POST(data_json, NN_IP, port)                 # POST the file name and size to NN
+    # my_DN_list = json.loads(response.content)
+    my_DN_list = json.loads(json.loads(response.content.decode("utf-8")))   # DN list as a dict
 
+    list_data_node(my_DN_list)
 
-    # Get response from NameNode with block list and DN list -- TODO: handle situation if filename is already in use
-    # Forward block data to each DN in the DN List
-    block_json = response[key]                           # get everything but the filename
-    key_list = block_json.keys()                        # list of block names
-    file_in_blocks = get_file_in_blocks(s3_obj_str)     # list of file contents in 64B strings
-    # print(len)
-    i = 0;                                              # index of file_in_blocks
+    # print(my_DN_list)
+    # print(my_DN_list)
+    # print("\n", type(my_DN_list))
 
-    for key in key_list:
-        print("Sending block ", key, "to data nodes: ")
-        block_str = file_in_blocks[i]
-        i = i + 1
-
-        for dn in block_json[key]:
-            block_for_DN = json.dumps({key: block_str})         # convert string to json
-            print(dn, " ---> ", end = '')
-            print (block_for_DN)
-            POST(block_for_DN, NN_IP)                           # TODO: change this to DN_IP!!!
-        print("---")
+    # ***** WORKING HERE *******
+    # response = GET()                                        # GET the DN list from the NN
+    # if response == "ERROR":
+    #     print ("ERROR")
+    #     return
+    # else:
+    #     print("DN List from NameNode: ")
+    #     print(response, "\n")
+    #
+    #
+    # # Get response from NameNode with block list and DN list -- TODO: handle situation if filename is already in use
+    # # Forward block data to each DN in the DN List
+    # block_json = response[key]                           # get everything but the filename
+    # key_list = block_json.keys()                        # list of block names
+    # file_in_blocks = get_file_in_blocks(s3_obj_str)     # list of file contents in 64B strings
+    # # print(len)
+    # i = 0;                                              # index of file_in_blocks
+    #
+    # for key in key_list:
+    #     print("Sending block ", key, "to data nodes: ")
+    #     block_str = file_in_blocks[i]
+    #     i = i + 1
+    #
+    #     ip_index = 0                                            # temp for testing communication with DN locally
+    #     for dn in block_json[key]:
+    #         block_for_DN = json.dumps({key: block_str})         # convert string to json
+    #         print(dn, ":", ports[ip_index], " ---> ", end = '')
+    #         print(block_for_DN)
+    #         POST(block_for_DN, NN_IP, ports[ip_index])                 # TODO: change this to DN_IP!!!
+    #         ip_index = ip_index + 1
+    #         # POST(block_for_DN, NN_IP, NN_IP)                         # TODO: change this to DN_IP!!!
+    #     print("---")
 
 
 def get_file_in_blocks(file_str):
@@ -108,17 +128,26 @@ def read_file():
     # TODO: Receive copy of file from NN
 
 
-def list_data_node():
+def list_data_node(DN_list_dict):
     print("\nTo implement: Listing data nodes that store replicas of each block of file...\n")
     # TODO: get user input/validate input for which file they want info for
 
-    # print("\File: ", key)         # where the key is the filename
-    # for key in key_list:
-    #     print(key,": " , end = '')
-    #     for dn in block_json[key]:
-    #         print(dn, " ", end = '')
-    #     print()
-    # print("\n")
+    filename_keys = DN_list_dict.keys()
+    for filename in filename_keys:                          # this should only loop ONCE
+        print("----------------------------------")
+        print("DN LIST FOR FILE: ", filename)
+        print("----------------------------------")
+
+
+    block_list = []
+    for block in DN_list_dict[filename]:
+        block_list.append(block)
+
+    for block in block_list:
+        print(block, " -->  ", end = "")
+        for dn in DN_list_dict[filename][block]:
+            print(dn, " ", end="")
+        print()
 
 
 def GET():
@@ -131,11 +160,13 @@ def GET():
         # print(response.json())
 
 
-def POST(data, IP):
+def POST(data, IP, port):
     response = requests.post(IP + ":" + port, json=data)    # send data in form of JSON to NN
     if response.status_code != 200:
         print("POST ERROR ", response)
         return "ERROR"
+    else:
+        return response
     # else:
     #     print("Successfully posted :) ")
 

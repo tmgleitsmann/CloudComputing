@@ -40,11 +40,13 @@ class DN_server(Resource):
 
     def post(self):
         str_obj = request.data.decode("utf-8")
-        a = json.loads(str_obj)
-        print(a.keys())
-        my_blocks.update(a)
+        a = json.loads(json.loads(str_obj))                     # data as a dict
+        my_blocks.update(a)                                     # add {"blockid":"data"} to my_blocks dict
+
         #now we need to send a block report to NN from here.
         my_keys.append(a.keys())
+        print(my_blocks)
+
 
         #THIS IS THE BLOCK REPORT FOR THE NAME NODE
         # response = requests.post(localhost + ":" + port, data=my_keys)
@@ -54,8 +56,8 @@ class DN_server(Resource):
         #     print("successfully posted block report to NN :) ")
 
 
-        print(my_blocks)
-        print(my_keys)
+        # print(my_blocks)
+        # print(my_keys)
 
         return request.data.decode("utf-8")
 
@@ -65,4 +67,4 @@ class DN_server(Resource):
 api.add_resource(DN_server, "/")
 
 if __name__ == "__main__":
-    app.run(port='5000')
+    app.run(port='6000')
