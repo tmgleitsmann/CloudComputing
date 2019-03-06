@@ -4,31 +4,28 @@ import requests
 import json
 import datetime
 
-
 app = Flask(__name__)
 api = Api(app)
 
-parser = reqparse.RequestParser()        # JSON parser
+parser = reqparse.RequestParser()                                       # JSON parser
 parser.add_argument('file')
 
-# NN's storage
-# beat block lists and
-# DN lists
+# temp list of DN IPs -- FIX to heart beat list
+DN_IP = ["http://127.0.0.1:6000", "http://127.0.0.1:6001", "http://127.0.0.1:6002"]
 
-# Temp variables
-DN_IP = ["http://127.0.0.1:6000", "http://127.0.0.1:6001", "http://127.0.0.1:6002"]#, "127.0.0.1:6003", "127.0.0.1:6004"]    # temp list of DN IPs -- FIX to heart beat list
+# NN data
 master_DNlists_dict = {}                                                # master list of all DN lists
-master_heartbeat_dict = {}
+master_heartbeat_dict = {}                                              # master list for block reports / heart beats
 
 # NN Setup
-block_size = 4000                                                         # TODO: change from B to MB
+block_size = 4000                                                       # TODO: change from B to MB
 replication_factor = 2
 
 
 class NN_server(Resource):
 
-    def get(self):
-        return "Hello world! This is a GET response"
+    # def get(self):
+    #     return "Hello world! This is a GET response"
 
     def post(self):
 
@@ -56,21 +53,21 @@ class NN_server(Resource):
             block_index += 1
 
         # 2: assign a list of DN to each block (round robin) + create an empty DN list to store locally
-        block_json = {}                                 # "inside" json for block data (block id and list of DNs)
-        block_json_emptylist = {}                       # empty DN list for NN to store
-        rr_index = 0                                    # round robin index
-        empty_str = ""                                  # for block_json_emptyList
+        block_json = {}                                     # "inside" json for block data (block id and list of DNs)
+        block_json_emptylist = {}                           # empty DN list for NN to store
+        rr_index = 0                                        # round robin index
+        empty_str = ""                                      # for block_json_emptyList
 
-        for block in blockid_list:                      # make a DN list for each blockid in file
+        for block in blockid_list:                          # make a DN list for each blockid in file
             dn_str = ""
-            for i in range(0, replication_factor):      # assign N number of DNs per blockid, where N = rep. factor
-                ip = DN_IP[(rr_index + i) % len(DN_IP)] # round robin assignment
+            for i in range(0, replication_factor):          # assign N number of DNs per blockid, where N = rep. factor
+                ip = DN_IP[(rr_index + i) % len(DN_IP)]     # round robin assignment
                 dn_str = dn_str + ip + " "
                 # dn_list.append(ip)
 
             rr_index = (rr_index + 1) % len(DN_IP)              # increment the rr_index or wraps back around
-            block_json.update({block: dn_str})                 # update block_json for client
-            block_json_emptylist.update({block: empty_str})    # update block_json_emptyList to store locally
+            block_json.update({block: dn_str})                  # update block_json for client
+            block_json_emptylist.update({block: empty_str})     # update block_json_emptyList to store locally
 
         # 3: create the final DN list to send to client + store the empty DN list version locally in master DN list
         DN_list_json = {filename: block_json_emptylist}
@@ -78,42 +75,31 @@ class NN_server(Resource):
 
         DN_list_json_cli =  {filename: block_json}
 
-        # print("PRINT MASTER DN LIST")
-        # for f in master_DNlists_dict:
-        #     print("FILE: ", f)
-        #     for b in master_DNlists_dict[f]:
-        #         print("BLOCK: ", b, end="")
-        #         print(" --> ", master_DNlists_dict[f][b])
-        # print()
-        #
-        # print("PRINT DN LIST for client")
-        # for f in DN_list_json_cli:
-        #     print("FILE: ", f)
-        #     for b in DN_list_json_cli[f]:
-        #         print("BLOCK: ", b, end="")
-        #         print(" --> ", DN_list_json_cli[f][b])
-        # print()
-
         print("\nSending DN list to client...")
         return json.dumps(DN_list_json_cli)                     # send the client version
 
 
 class BlockBeats(Resource):
 
-    def get(self):
-        return master_DNlists_dict#"GET response from BlockBeats class"
+    # def get(self):
+    #     return master_DNlists_dict#"GET response from BlockBeats class"
 
+    # For DN's block report / heart beat.
+    # DN will POST its address and a list of block ids. Use this info to update master DN list.
     def post(self):
 
-        bb = json.loads(request.data.decode("utf-8"))           # list of block id from a DN
+        bb = json.loads(request.data.decode("utf-8"))           # POST data from DN
         sender_addr = bb["DN_addr"]                             # sender's address (IP + port)
         block_list = bb["block_report"]                         # get list of blocks that this DN currently has
 
         # update master heart beat list with DN's IP and current time stamp
         master_heartbeat_dict.update({sender_addr: datetime.datetime.now()})
 
-        print("From sender ", sender_addr, " -->  ", block_list)
+        # display who send the block report and what the block report contains
+        print("Block report from:", sender_addr)
+        print(block_list, "\n")
 
+        # update master DN list
         for dn_b in block_list:
             for f in master_DNlists_dict:
                 for b in master_DNlists_dict[f]:
@@ -125,29 +111,32 @@ class BlockBeats(Resource):
         for f in master_DNlists_dict:
             print("file: ", f)
             for b in master_DNlists_dict[f]:
-                print("\tblock ", b, " --> ", master_DNlists_dict[f][b])
+                print("\tblock: ", b, " --> ", master_DNlists_dict[f][b])
         print()
 
 
-class get_DN_list(Resource):
+class read_or_get_DN_list(Resource):
 
+    # For client's "get DN list" operation.
+    # Client will POST a file name. If file exists, return DN list. Else, return "ERROR"
     def post(self):
 
+        # get the file name from POST request
         bb = json.loads(request.data.decode("utf-8"))
         file = bb["filename"]
 
+        # if file exists in my master DN list, return the DN list associated with it
         if file in master_DNlists_dict:
-            print(file, " exists!")
             return master_DNlists_dict[file]
+
+        # else, return error message
         else:
-            print(file, " does NOT exist!")
             return "ERROR"
 
 
 api.add_resource(NN_server, "/")
 api.add_resource(BlockBeats, "/BB")
-api.add_resource(get_DN_list, "/getDNList")
-
+api.add_resource(read_or_get_DN_list, "/readOrGetDNList")
 
 
 if __name__ == "__main__":

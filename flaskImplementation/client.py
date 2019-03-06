@@ -8,17 +8,12 @@ from botocore.exceptions import ClientError
 # Global variables
 s3 = boto3.resource('s3')
 ec2 = boto3.resource('ec2')
+
 block_size = 4000                     # MB                      # CHANGE THIS BACK TO 64
 replication_factor = 2
-NN_addr = "http://127.0.0.1:5000"     # hard coded for now
-get_DN_List_endpoint = "/getDNList"
-# port = "5000"                       # hard coded for now
-
-# port1 = "6000"
-# port2 = "7000"                       # hard coded for now
-# port3 = "8000"                       # hard coded for now
-
-# ports = [port1, port2, port3]
+NN_addr = "http://127.0.0.1:5000"                               # ! hard coded for now !
+get_DN_List_endpoint = "/readOrGetDNList"                       # NN endpoint: Cli POSTs filename and gets DN list
+blockbeat_endpoint = "/BB"                                      # NN endpoint: Cli POSTs filename and gets DN list - is this being used?
 
 
 def greetings():
@@ -110,28 +105,39 @@ def get_file_in_blocks(file_str):
 
 def read_file():
 
-    print("\nTo implement: Read file...\n")
+    file = input("Enter the filename: ")                                # enter name of file to get DN list for
+    NN_get_DN_list_addr = NN_addr + get_DN_List_endpoint                # addr + "/readOrGetDNList" endpoint in NN
+
+
     # TODO: get user input/validate input for which filename user wants to read
     # TODO: send file name to NN
     # TODO: Receive copy of file from NN
 
 
-def list_data_node():
+def get_DN_list():
 
     # TODO: get user input/validate input for which file they want info for
     file = input("Enter the filename: ")                                # enter name of file to get DN list for
-    NN_get_DN_list_addr = NN_addr + get_DN_List_endpoint                # specify addr + "/getDNList" endpoint in NN
+    NN_get_DN_list_addr = NN_addr + get_DN_List_endpoint                # addr + "/readOrGetDNList" endpoint in NN
     data_json = {"filename": file}                                      # create the json object to POST
-    response = POST(data_json, NN_get_DN_list_addr)                     # POST file name to NN at "/getDNList" endpoint
+    response = POST(data_json, NN_get_DN_list_addr)                     # POST filename to NN @ "/readOrGetDNList" endpoint
 
     # if, NN returned an ERROR, print error message and return
     if response.content.decode("utf-8").strip("\"\n") == "ERROR":
         print("\nERROR: This file does not exist")
-        return
+        err = "ERROR"
+        return err, file
 
     # else, print the formatted DN list
     else:
-        dn_list = json.loads(response.content.decode("utf-8"))          # convert from string to dict
+        return json.loads(response.content.decode("utf-8")), file
+
+
+def print_DN_list():
+
+    dn_list, file = get_DN_list()
+
+    if dn_list != "ERROR":
         print("\n--------------------------------------------")
         print("GET DN LIST FOR FILE: ", file)
         print("--------------------------------------------")
@@ -144,7 +150,8 @@ def list_data_node():
 
 
 def GET():
-    response = requests.get("http://127.0.0.1:5000/BB")         # get the DN list from the NN
+    blockbeat_endpoint_addr = NN_addr + blockbeat_endpoint
+    response = requests.get(blockbeat_endpoint_addr)                    # get the DN list from the NN
     if response.status_code != 200:
         print("POST ERROR ", response)
         return "ERROR"
@@ -153,7 +160,7 @@ def GET():
 
 
 def POST(data, addr):
-    response = requests.post(addr, json=data)                   # send data in form of JSON to NN
+    response = requests.post(addr, json=data)                            # send data in form of JSON to NN
     if response.status_code != 200:
         print("POST ERROR ", response)
         return "ERROR"
@@ -163,7 +170,7 @@ def POST(data, addr):
 
 def main():
 
-    # create_file()                                               # AKA write
+    # create_file()                                                     # AKA write
 
     greetings()
 
@@ -180,7 +187,7 @@ def main():
             read_file()
 
         elif action is "3":
-            list_data_node()
+            print_DN_list()
 
         else:
             break
@@ -189,13 +196,5 @@ def main():
     bye()
 
 
-    # print("calling GET()...")
-    # response = GET()
-
-    # print("calling PUT_to_NN()...")
-    # PUT_to_NN()
-
-
 if __name__ == "__main__":
     main()
-
