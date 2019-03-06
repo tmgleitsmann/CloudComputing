@@ -62,6 +62,7 @@ def create_file():
     # Save save file name and file size into json object
     filename = key
     size = s3obj.content_length
+    key = filename
     file_dict = {"filename": filename,"filesize": size}
     data_json = json.dumps(file_dict)                           # convert file info dict into json
 
@@ -81,25 +82,24 @@ def create_file():
 
     # Forward block data to each DN in the DN List
     my_DN_dict = json.loads(json.loads(response.content.decode("utf-8")))   # DN list as a dict
-    list_data_node(my_DN_dict)
-    block_json = my_DN_dict[key]                                # get everything but the filename
-    key_list = block_json.keys()                                # list of block names
-    file_in_blocks = get_file_in_blocks(s3_obj_str)             # list of file contents in 64B strings
-    i = 0                                                       # index of file_in_blocks
+    print("PRINT RECEIVED DN LIST")
+    list_data_node(my_DN_dict)                                    # print
 
-    for key in key_list:                                        # for each key (block ID)
-        print("Sending block ", key, "to data nodes: ")
-        block_str = file_in_blocks[i]                           # get next chunk of file (each chunk = blocked size)
-        i = i + 1
+    file_in_blocks = get_file_in_blocks(s3_obj_str)  # list of file contents in 64B strings
+    i = 0  # index of file_in_blocks
 
-        for dn in block_json[key]:                              # for each DN in the for this block
-            block_for_DN = json.dumps({key: block_str})         # convert string to json
-            print(dn, " ---> ", end = '')                       # dn represents the ip:port of DN
-            # print(block_for_DN)
-            # WORKING HERE!!!!
-            print(key)#(json.loads(block_for_DN))
-            POST(block_for_DN, dn)                              # TODO: change this to DN_IP!!!
-        print("-----------------------------------------------------")
+    for f in my_DN_dict:
+        for b in my_DN_dict[f]:
+            print("Sending block ", b, "to data nodes: ")
+            block_str = file_in_blocks[i]                           # get next chunk of file (each chunk = blocked size)
+            i = i + 1
+            dn_dest_list = my_DN_dict[f][b].strip(" ").split(" ")
+            for dn in dn_dest_list:
+                block_for_DN = json.dumps({b: block_str})         # convert string to json
+                print(dn, " ---> ", end = '')                       # dn represents the ip:port of DN
+                print(b)#(json.loads(block_for_DN))
+                # print("\n", block_for_DN, "\n")
+                POST(block_for_DN, dn)                              # TODO: change this to DN_IP!!!
 
 
 def get_file_in_blocks(file_str):
@@ -121,21 +121,14 @@ def list_data_node(DN_list_dict):
 
     # TODO: get user input/validate input for which file they want info for
 
-    filename_keys = DN_list_dict.keys()
-    for filename in filename_keys:                              # this should only loop ONCE
+    for filename in DN_list_dict:                              # this should only loop ONCE
         print("--------------------------------------------")
         print("GET DN LIST FOR FILE: ", filename)
         print("--------------------------------------------")
 
-
-    block_list = []
-    for block in DN_list_dict[filename]:
-        block_list.append(block)
-
-    for block in block_list:
-        print(block, " -->  ", end = "")
-        for dn in DN_list_dict[filename][block]:
-            print(dn, " ", end="")
+        for block in DN_list_dict[filename]:
+            print(block, " --> ", end="")
+            print(DN_list_dict[filename][block])
         print()
 
 
@@ -145,8 +138,9 @@ def GET():
         print("POST ERROR ", response)
         return "ERROR"
     else:
-        print(response.content)
-        return response.json()
+        return response.content
+        # print(response.content)
+        # return response.json()
         # print(response.json())
 
 
@@ -187,8 +181,27 @@ def main():
     # bye()
 
 
-    # print("calling GET_from_NN()...")
-    # GET_from_NN()
+    # print("calling GET()...")
+    # response = GET()
+    # dn_list = json.loads(response.decode("utf-8"))
+    # # print(dn_list)
+    # # print(type(dn_list))
+    # blist = ["sample_us.tsv_b0",  "test.txt_b0"]
+    #
+    # for b in blist:
+    #     for f in dn_list:
+    #         for bid in dn_list[f]:
+    #             if bid == b and bid not in dn_list[f][bid]:
+    #                 dn_list[f][bid].append(b)
+    #
+    # for filename in dn_list:
+    #     print("filename: ", filename, " (", type(filename), ")")
+    #     for block in dn_list[filename]:
+    #         print("\tblock: ", block, " (", type(block), ")")
+    #         print("\tlist: ", dn_list[filename][block], " (", type(dn_list[filename][block]), ")")
+
+
+
     #
     # print("calling PUT_to_NN()...")
     # PUT_to_NN()
