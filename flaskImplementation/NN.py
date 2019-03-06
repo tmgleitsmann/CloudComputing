@@ -129,8 +129,25 @@ class BlockBeats(Resource):
         print()
 
 
+class get_DN_list(Resource):
+
+    def post(self):
+
+        bb = json.loads(request.data.decode("utf-8"))
+        file = bb["filename"]
+
+        if file in master_DNlists_dict:
+            print(file, " exists!")
+            return master_DNlists_dict[file]
+        else:
+            print(file, " does NOT exist!")
+            return "ERROR"
+
+
 api.add_resource(NN_server, "/")
 api.add_resource(BlockBeats, "/BB")
+api.add_resource(get_DN_list, "/getDNList")
+
 
 
 if __name__ == "__main__":

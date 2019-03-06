@@ -11,6 +11,7 @@ ec2 = boto3.resource('ec2')
 block_size = 4000                     # MB                      # CHANGE THIS BACK TO 64
 replication_factor = 2
 NN_addr = "http://127.0.0.1:5000"     # hard coded for now
+get_DN_List_endpoint = "/getDNList"
 # port = "5000"                       # hard coded for now
 
 # port1 = "6000"
@@ -52,54 +53,51 @@ def create_file():
     print("WRITE")
     print("------\n")
 
-    # get name of S3 object to create in SUFS -- TODO: validate user input
-    # bucket = input("Enter an S3 object: ")                    # s3 bucket name: dundermifflin-sufs
+    # get name of S3 object from user to create in SUFS         ! TODO: validate user input !
+    key = input("Enter an S3 object: ")                         # s3 bucket name: dundermifflin-sufs
     bucket = 'dundermifflin-sufs'                               # hard coded for now
-    key = 'sample_us.tsv'                                       # hard coded for now - this is the only file in the bucket now
     s3obj = s3.Object(bucket, key)                              # var that represents an s3 object
     s3_obj_str = s3obj.get()['Body'].read().decode('utf-8')     # data from s3 as a string
 
     # Save save file name and file size into json object
     filename = key
     size = s3obj.content_length
-    key = filename
-    file_dict = {"filename": filename,"filesize": size}
+    file_dict = {"filename": filename,"filesize": size}         # json object with file name and file size
     data_json = json.dumps(file_dict)                           # convert file info dict into json
 
+    # Send json object to NameNode and get DN list back as a response
     print("Sending file info for WRITE to Name Node:")
     print("  - File name: ", filename)
     print("  - File size: ", size, "\n")
-
-    # Send json object to NameNode and get DN list back as a response
     response = POST(data_json, NN_addr)                         # POST the file name and size to NN
 
-# WORKING HERE!
     # check if file already exists (if exists, print error and return)
     if response == "ERROR":
         print("ERROR: cannot write ", filename, "because it already exists.")
         return
-    print("Received DN list from NN for file ", filename, "\n")
 
-    # Forward block data to each DN in the DN List
+    # Else, forward block data to each DN in the DN List
+    print("File info sent to NN.")
+    print("NN returned DN list for file:", filename)
+    print("Sending file blocks to DNs...\n")
+
     my_DN_dict = json.loads(json.loads(response.content.decode("utf-8")))   # DN list as a dict
-    print("PRINT RECEIVED DN LIST")
-    list_data_node(my_DN_dict)                                    # print
+    file_in_blocks = get_file_in_blocks(s3_obj_str)                         # list of file contents in block-sized str
+    i = 0                                                                   # index of file_in_blocks
 
-    file_in_blocks = get_file_in_blocks(s3_obj_str)  # list of file contents in 64B strings
-    i = 0  # index of file_in_blocks
-
+    # loop through DN_list and send each block to the given DN
     for f in my_DN_dict:
         for b in my_DN_dict[f]:
-            print("Sending block ", b, "to data nodes: ")
-            block_str = file_in_blocks[i]                           # get next chunk of file (each chunk = blocked size)
+            print("\nSending block:", b, "...")
+            block_str = file_in_blocks[i]                                   # get next chunk of file
             i = i + 1
-            dn_dest_list = my_DN_dict[f][b].strip(" ").split(" ")
+            dn_dest_list = my_DN_dict[f][b].strip(" ").split(" ")           # convert DN str to DN list
+
+            # for each DN in the DN list, send {blockid: data}
             for dn in dn_dest_list:
-                block_for_DN = json.dumps({b: block_str})         # convert string to json
-                print(dn, " ---> ", end = '')                       # dn represents the ip:port of DN
-                print(b)#(json.loads(block_for_DN))
-                # print("\n", block_for_DN, "\n")
-                POST(block_for_DN, dn)                              # TODO: change this to DN_IP!!!
+                block_for_DN = json.dumps({b: block_str})                   # convert string to json
+                print(dn, " ---> ", b)                                      # dn represents the ip:port of DN
+                POST(block_for_DN, dn)                                      # TODO: change this to DN_IP!!!
 
 
 def get_file_in_blocks(file_str):
@@ -111,24 +109,37 @@ def get_file_in_blocks(file_str):
 
 
 def read_file():
+
     print("\nTo implement: Read file...\n")
     # TODO: get user input/validate input for which filename user wants to read
     # TODO: send file name to NN
     # TODO: Receive copy of file from NN
 
 
-def list_data_node(DN_list_dict):
+def list_data_node():
 
     # TODO: get user input/validate input for which file they want info for
+    file = input("Enter the filename: ")                                # enter name of file to get DN list for
+    NN_get_DN_list_addr = NN_addr + get_DN_List_endpoint                # specify addr + "/getDNList" endpoint in NN
+    data_json = {"filename": file}                                      # create the json object to POST
+    response = POST(data_json, NN_get_DN_list_addr)                     # POST file name to NN at "/getDNList" endpoint
 
-    for filename in DN_list_dict:                              # this should only loop ONCE
-        print("--------------------------------------------")
-        print("GET DN LIST FOR FILE: ", filename)
+    # if, NN returned an ERROR, print error message and return
+    if response.content.decode("utf-8").strip("\"\n") == "ERROR":
+        print("\nERROR: This file does not exist")
+        return
+
+    # else, print the formatted DN list
+    else:
+        dn_list = json.loads(response.content.decode("utf-8"))          # convert from string to dict
+        print("\n--------------------------------------------")
+        print("GET DN LIST FOR FILE: ", file)
         print("--------------------------------------------")
 
-        for block in DN_list_dict[filename]:
+        # for each block in the file, print the DNs that holds this file
+        for block in dn_list:
             print(block, " --> ", end="")
-            print(DN_list_dict[filename][block])
+            print(dn_list[block])
         print()
 
 
@@ -139,9 +150,6 @@ def GET():
         return "ERROR"
     else:
         return response.content
-        # print(response.content)
-        # return response.json()
-        # print(response.json())
 
 
 def POST(data, addr):
@@ -155,54 +163,35 @@ def POST(data, addr):
 
 def main():
 
-    create_file()                                               # AKA write
+    # create_file()                                               # AKA write
 
-    # greetings()
-    #
-    # # Loop until user quits with action #4
-    # while True:
-    #
-    #     # print action selection list
-    #     action = action_list()
-    #
-    #     if action is "1":
-    #         create_file()
-    #
-    #     elif action is "2":
-    #         read_file()
-    #
-    #     elif action is "3":
-    #         list_data_node()
-    #
-    #     else:
-    #         break
-    #
-    # # Quit program
-    # bye()
+    greetings()
+
+    # Loop until user quits with action #4
+    while True:
+
+        # print action selection list
+        action = action_list()
+
+        if action is "1":
+            create_file()
+
+        elif action is "2":
+            read_file()
+
+        elif action is "3":
+            list_data_node()
+
+        else:
+            break
+
+    # Quit program
+    bye()
 
 
     # print("calling GET()...")
     # response = GET()
-    # dn_list = json.loads(response.decode("utf-8"))
-    # # print(dn_list)
-    # # print(type(dn_list))
-    # blist = ["sample_us.tsv_b0",  "test.txt_b0"]
-    #
-    # for b in blist:
-    #     for f in dn_list:
-    #         for bid in dn_list[f]:
-    #             if bid == b and bid not in dn_list[f][bid]:
-    #                 dn_list[f][bid].append(b)
-    #
-    # for filename in dn_list:
-    #     print("filename: ", filename, " (", type(filename), ")")
-    #     for block in dn_list[filename]:
-    #         print("\tblock: ", block, " (", type(block), ")")
-    #         print("\tlist: ", dn_list[filename][block], " (", type(dn_list[filename][block]), ")")
 
-
-
-    #
     # print("calling PUT_to_NN()...")
     # PUT_to_NN()
 
