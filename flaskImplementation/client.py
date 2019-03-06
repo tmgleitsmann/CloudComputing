@@ -9,7 +9,7 @@ from botocore.exceptions import ClientError
 s3 = boto3.resource('s3')
 ec2 = boto3.resource('ec2')
 block_size = 4000                     # MB                      # CHANGE THIS BACK TO 64
-replication_factor = 1
+replication_factor = 2
 NN_addr = "http://127.0.0.1:5000"     # hard coded for now
 # port = "5000"                       # hard coded for now
 
@@ -72,6 +72,7 @@ def create_file():
     # Send json object to NameNode and get DN list back as a response
     response = POST(data_json, NN_addr)                         # POST the file name and size to NN
 
+# WORKING HERE!
     # check if file already exists (if exists, print error and return)
     if response == "ERROR":
         print("ERROR: cannot write ", filename, "because it already exists.")

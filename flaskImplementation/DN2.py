@@ -10,9 +10,9 @@ parser = reqparse.RequestParser()
 parser.add_argument('file')
 
 NN_addr = "http://127.0.0.1:5000"
-my_addr = "http://127.0.0.1:6000"
+my_addr = "http://127.0.0.1:6001"
 localhost = "http://127.0.0.1"                          #THIS NEEDS TO CHANGE TO NAME NODE IP
-port = "6000"
+port = "6001"
 blockbeat = "/BB"
 
 my_blocks = {}
@@ -49,7 +49,6 @@ class DN_server(Resource):
             "DN_addr": my_addr,
             "block_report": list(my_blocks.keys())
         }
-        # send block report
         response = requests.post(NN_BB_addr, json=block_report)     # send my blocks as a list to NN
 
         if response.status_code != 200:
@@ -62,4 +61,4 @@ class DN_server(Resource):
 api.add_resource(DN_server, "/")
 
 if __name__ == "__main__":
-    app.run(port='6000')
+    app.run(port='6001')

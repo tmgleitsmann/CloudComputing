@@ -22,7 +22,7 @@ master_heartbeat_dict = {}
 
 # NN Setup
 block_size = 4000                                                         # TODO: change from B to MB
-replication_factor = 1
+replication_factor = 2
 
 
 class NN_server(Resource):
@@ -86,16 +86,78 @@ class BlockBeats(Resource):
         return "GET response from BlockBeats class"
 
     def post(self):
+
         bb = json.loads(request.data.decode("utf-8"))           # list of block id from a DN
+        sender_addr = bb["DN_addr"]                             # sender's address (IP + port)
         block_list = bb["block_report"]                         # get list of blocks that this DN currently has
 
-        for block in block_list:
-            heartbeat_data = {block: datetime.datetime.now()}
-            master_heartbeat_dict.update(heartbeat_data)
+        # update master heart beat list with DN's IP and current time stamp
+        master_heartbeat_dict.update({sender_addr: datetime.datetime.now()})
 
-        print("master HB list: ")
-        for key in master_heartbeat_dict.keys():
-            print(key, ": ", master_heartbeat_dict[key])
+        print("From sender ", sender_addr, " -->  ", block_list)
+
+# WORKING HERE!
+#         for blockid_from_dn in block_list:
+#             print("block: ", blockid_from_dn)
+#             for file in master_DNlists_dict:
+#                 for blockid in master_DNlists_dict[file]:
+#                     addr_list = master_DNlists_dict[file][blockid]
+#                     print(str(blockid), " ", addr_list)
+#
+#                     if blockid == blockid_from_dn:#sender_addr not in addr_list and blockid == blockid_from_dn:
+#                         print("adding ", blockid, " to ", blockid_from_dn)
+#                         master_DNlists_dict[file][blockid].append(sender_addr)
+#
+
+
+
+
+                    #     # if (blockid == blockid_from_dn) and (sender_addr not in master_DNlists_dict[file][blockid]):
+                    #     print("adding ", sender_addr, " to block ", blockid)
+                    #     addr_list.append(sender_addr)
+
+            # print("got this block id ", blockid, " from ", sender_addr)
+            # filename = blockid[:blockid.find("_b")]
+            # block_list_for_this_file = master_DNlists_dict[filename]        # give you
+            # dn_list = block_list_for_this_file[blockid]
+            # if sender_addr not in dn_list:
+            #     dn_list.append(sender_addr)
+
+            # for dn_list in block_list_for_this_file:
+            #     for dn in dn_list:
+            #         if str(dn) == str(blockid):
+            #             if sender_addr not in dn_list:
+            #                 dn_list.append(sender_addr)
+
+            # dn_list_for_this_block = block_list_for_this_file[blockid]
+            # if sender_addr not in dn_list_for_this_block:
+            #     dn_list_for_this_block.append(sender_addr)
+            # # print(block_list_for_this_file)
+            # print(dn_list_for_this_block)
+            # print()
+
+
+        # save data into master DN list
+        # for block in block_list:
+        #     heartbeat_data = {block: datetime.datetime.now()}
+        #     master_heartbeat_dict.update(heartbeat_data)
+
+
+        # print("\n*** MASTER DN LIST ***")
+        # # print(master_DNlists_dict)
+        # print (master_DNlists_dict)
+        # print()
+
+        # for key in master_DNlists_dict.keys():
+        #     print("-- FILE: ", key)
+        #     for block in master_DNlists_dict[key]:
+        #         print(block, " ", master_DNlists_dict[key][block])
+        #         print()
+        # print()
+        #
+        # print("master HB list: ")
+        # for key in master_heartbeat_dict.keys():
+        #     print(key, ": ", master_heartbeat_dict[key])
 
 
 api.add_resource(NN_server, "/")
