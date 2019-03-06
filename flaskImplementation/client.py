@@ -42,6 +42,11 @@ def action_list():
     return selection
 
 
+"""
+Gets the filename from user. 
+POSTS the filename and size to NN and gets DN list returned. 
+Uses DN list to send blocks of data to DNs. 
+"""
 def create_file():
 
     print("\n------")
@@ -95,6 +100,11 @@ def create_file():
                 POST(block_for_DN, dn)                                      # TODO: change this to DN_IP!!!
 
 
+"""
+Takes a file as a string as a parameter. 
+Breaks the file into "block-sized" chunks into a list. 
+Returns list. 
+"""
 def get_file_in_blocks(file_str):
     file_in_blocks = []
     for block in range(0, len(file_str), block_size):
@@ -103,17 +113,28 @@ def get_file_in_blocks(file_str):
     return file_in_blocks
 
 
+"""
+Calls get_DN_list helper function which returns "ERROR" or DN list. 
+If DN list returned, get block data from DN in DN list. 
+"""
 def read_file():
 
-    file = input("Enter the filename: ")                                # enter name of file to get DN list for
-    NN_get_DN_list_addr = NN_addr + get_DN_List_endpoint                # addr + "/readOrGetDNList" endpoint in NN
+    dn_list, file = get_DN_list()
 
+    if dn_list != "ERROR":
+        print("to implement...")
 
     # TODO: get user input/validate input for which filename user wants to read
     # TODO: send file name to NN
     # TODO: Receive copy of file from NN
 
 
+"""
+Gets user input for file name. 
+POSTS filename to NN. 
+Gets and error message or DN list in return from POST. 
+return "ERROR" or DN list as dict.
+"""
 def get_DN_list():
 
     # TODO: get user input/validate input for which file they want info for
@@ -133,6 +154,10 @@ def get_DN_list():
         return json.loads(response.content.decode("utf-8")), file
 
 
+"""
+Calls get_DN_list helper function which returns "ERROR" or DN list. 
+If DN list returned, print it out formatted. 
+"""
 def print_DN_list():
 
     dn_list, file = get_DN_list()
