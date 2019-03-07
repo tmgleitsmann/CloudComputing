@@ -30,9 +30,10 @@ class NN_server(Resource):
     def post(self):
 
         # temp - change to accessing local DN_list !!
-        with open("testNNjson.json", "r") as read_file:
-            data = json.load(read_file)
-        files_list = data.keys()
+        files_list = master_DNlists_dict.keys()
+        # with open("testNNjson.json", "r") as read_file:
+        #     data = json.load(read_file)
+        # files_list = data.keys()
 
         # get file name and size from client
         cli_data = json.loads(json.loads(request.data.decode("utf-8")))
@@ -42,7 +43,7 @@ class NN_server(Resource):
         # if file already exists, ERROR
         if filename in files_list:
             print("This file already exists!")
-            return 400                              # change this... what to actually return?
+            return "ERROR"                              # change this... what to actually return?
 
         # else the file does not exist, create the DN list
         # 1: create list of block ids

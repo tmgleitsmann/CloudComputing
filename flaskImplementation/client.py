@@ -57,7 +57,7 @@ def create_file():
     key = input("Enter an S3 object: ")                         # s3 bucket name: dundermifflin-sufs
     bucket = 'dundermifflin-sufs'                               # hard coded for now
     s3obj = s3.Object(bucket, key)                              # var that represents an s3 object
-    s3_obj_str = s3obj.get()['Body'].read().decode('utf-8')     # data from s3 as a string
+    s3_obj_str = s3obj.get()['Body'].read().decode('utf-8')     # data from s3 as a string                  !! CHECK IF FILE EXISTS IN S3 !
 
     # Save save file name and file size into json object
     filename = key
@@ -72,7 +72,7 @@ def create_file():
     response = POST(data_json, NN_addr)                         # POST the file name and size to NN
 
     # check if file already exists (if exists, print error and return)
-    if response == "ERROR":
+    if response.content.decode("utf-8").strip("\"\n") == "ERROR":
         print("ERROR: cannot write ", filename, "because it already exists.")
         return
 
@@ -121,12 +121,64 @@ def read_file():
 
     dn_list, file = get_DN_list()
 
-    if dn_list != "ERROR":
-        print("to implement...")
+    if dn_list == "ERROR":
+        return
 
-    # TODO: get user input/validate input for which filename user wants to read
-    # TODO: send file name to NN
-    # TODO: Receive copy of file from NN
+    print("\n--------------------------------------------")
+    print("READ FILE: ", file)
+    print("--------------------------------------------")
+
+    total_bytes = 0                                                                   # track how many bytes are read
+
+    # create file and save in local directory
+    read_file = open(file, "w")
+
+    # for each block in the file, print the DNs that holds this file
+    for block in dn_list:
+        # get the list of DN nodes
+        uncleaned_list = dn_list[block].split(" ")
+        ip_list = list(filter(None, uncleaned_list))
+        print(block, " --> ", ip_list)
+
+        # loop through each ip in the ip list
+        i = 0
+        while i < len(ip_list):
+            dn = ip_list[i]
+            payload = {"blockid": block}
+            # payload = "bogusid"
+            response = requests.get(dn, params=payload)
+            response = response.content.decode("utf-8").strip("\"\n")
+
+            # if you've looped through all dn and you still don't have the data... err!
+            if response == "ERROR" and i == (len(ip_list) - 1):
+                print("ERROR: Missing a block of data! Failure of replication factor.")
+                return
+
+            # else, you got the data, save and break to get next block
+            # extra check here for block id that does not exists on this node?
+            else:
+                i = i + 1
+                print("------------------------------------------------")
+                print("Block: ", block)
+                print("From data: ", dn)
+                read_file.write(response)
+                # print(type(response))
+                print("------------------------------------------------")
+                total_bytes = total_bytes + len(response)
+                break
+
+    read_file.close()
+    print("\nRead of file", file, "complete.")
+    print("Total bytes from READ: ", total_bytes, "\n")
+
+    # for dn in ip_list:
+    #     # get block data from this DN
+    #     # payload = {"blockid": block}
+    #     payload = "bogusid"
+    #     response = requests.get(dn, params=payload)
+    #     print(response.content.decode("utf-8").strip("\"\n"), " ", type(response.content.decode("utf-8").strip("\"\n")))
+    #     print()
+    #     print()
 
 
 """
