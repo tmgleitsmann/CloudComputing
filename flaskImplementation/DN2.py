@@ -14,6 +14,8 @@ my_addr = "http://127.0.0.1:6001"
 localhost = "http://127.0.0.1"                          #THIS NEEDS TO CHANGE TO NAME NODE IP
 port = "6001"
 blockbeat = "/BB"
+err_code = 400
+err_message = "ERROR"
 
 my_blocks = {}
 
@@ -21,13 +23,24 @@ my_blocks = {}
 class DN_server(Resource):
 
     def get(self):
-        str_obj = request.data.decode("utf-8")
-        if str_obj in my_blocks.keys():
-            print('key found. returning contents')
-            value = my_blocks[str_obj]
+        # get block id sent from client (key = "blockid")
+        parser = reqparse.RequestParser()
+        parser.add_argument("blockid")                              # name of key
+        args = parser.parse_args()
+        blockid = args["blockid"]                                   # payload from client containing block id
+
+        print("\nClient requested block: ", blockid, " - checking if I have it...", end="")
+
+        # if I have the block id, send the data back
+        if blockid in my_blocks.keys():
+            print("I HAVE block:", blockid, "\n")
+            value = my_blocks[blockid]
             return value
 
-        return 400
+        # else, return ERROR
+        else:
+            print("I do NOT have block:", blockid, "\n")
+            return "ERROR"
 
     def post(self):
 

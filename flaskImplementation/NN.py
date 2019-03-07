@@ -18,7 +18,7 @@ master_DNlists_dict = {}                                                # master
 master_heartbeat_dict = {}                                              # master list for block reports / heart beats
 
 # NN Setup
-block_size = 4000                                                       # TODO: change from B to MB
+block_size = 64000                                                       # TODO: change from B to MB
 replication_factor = 2
 err_code = 400
 err_message = "ERROR"

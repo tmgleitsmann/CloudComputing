@@ -9,7 +9,7 @@ from botocore.exceptions import ClientError
 s3 = boto3.resource('s3')
 ec2 = boto3.resource('ec2')
 
-block_size = 4000                     # MB                      # CHANGE THIS BACK TO 64
+block_size = 64000                     # MB                      # CHANGE THIS BACK TO 64
 replication_factor = 2
 NN_addr = "http://127.0.0.1:5000"                               # ! hard coded for now !
 get_DN_List_endpoint = "/readOrGetDNList"                       # NN endpoint: Cli POSTs filename and gets DN list
@@ -154,9 +154,9 @@ def read_file():
             payload = {"blockid": block}
             # payload = "bogusid"
             response = requests.get(dn, params=payload)
-            response = response.content.decode("utf-8")
-            print(json.loads(response))                     # TESTING HERE
-            print("\n\n")
+            response = json.loads(response.content.decode("utf-8"))
+            # print(json.loads(response))                     # TESTING HERE
+            # print("\n\n")
 
             # if you've looped through all dn and you still don't have the data... err!
             if response == "ERROR" and i == (len(ip_list) - 1):
@@ -257,31 +257,31 @@ def POST(data, addr):
 
 def main():
 
-    create_file()                                                     # AKA write
-    read_file()
+    # create_file()                                                     # AKA write
+    # read_file()
 
-    # # print_DN_list()
-    #
-    # # Loop until user quits with action #4
-    # while True:
-    #
-    #     # print action selection list
-    #     action = action_list()
-    #
-    #     if action is "1":
-    #         create_file()
-    #
-    #     elif action is "2":
-    #         read_file()
-    #
-    #     elif action is "3":
-    #         print_DN_list()
-    #
-    #     else:
-    #         break
-    #
-    # # Quit program
-    # bye()
+    # print_DN_list()
+
+    # Loop until user quits with action #4
+    while True:
+
+        # print action selection list
+        action = action_list()
+
+        if action is "1":
+            create_file()
+
+        elif action is "2":
+            read_file()
+
+        elif action is "3":
+            print_DN_list()
+
+        else:
+            break
+
+    # Quit program
+    bye()
 
 
 if __name__ == "__main__":
