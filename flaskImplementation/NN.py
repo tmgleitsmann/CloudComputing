@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, make_response
 from flask_restful import Api, Resource, reqparse, request
 import requests
 import json
@@ -20,7 +20,8 @@ master_heartbeat_dict = {}                                              # master
 # NN Setup
 block_size = 4000                                                       # TODO: change from B to MB
 replication_factor = 2
-
+err_code = 400
+err_message = "ERROR"
 
 class NN_server(Resource):
 
@@ -29,21 +30,22 @@ class NN_server(Resource):
 
     def post(self):
 
-        # temp - change to accessing local DN_list !!
         files_list = master_DNlists_dict.keys()
-        # with open("testNNjson.json", "r") as read_file:
-        #     data = json.load(read_file)
-        # files_list = data.keys()
 
         # get file name and size from client
+        print("data from client...")
+        # print(request.data.decode("utf-8"))
+        # print(type(request.data.decode("utf-8")))
         cli_data = json.loads(json.loads(request.data.decode("utf-8")))
+        print(cli_data)
+        print(type(cli_data))
         filename = cli_data['filename']
         filesize = cli_data['filesize']
 
         # if file already exists, ERROR
         if filename in files_list:
             print("This file already exists!")
-            return "ERROR"                              # change this... what to actually return?
+            return make_response(err_message.encode(), err_code)
 
         # else the file does not exist, create the DN list
         # 1: create list of block ids
@@ -77,7 +79,8 @@ class NN_server(Resource):
         DN_list_json_cli =  {filename: block_json}
 
         print("\nSending DN list to client...")
-        return json.dumps(DN_list_json_cli)                     # send the client version
+        return make_response(json.dumps(DN_list_json_cli), 200)
+        # return json.dumps(DN_list_json_cli)                     # send the client version
 
 
 class BlockBeats(Resource):

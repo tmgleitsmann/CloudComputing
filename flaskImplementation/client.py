@@ -14,7 +14,7 @@ replication_factor = 2
 NN_addr = "http://127.0.0.1:5000"                               # ! hard coded for now !
 get_DN_List_endpoint = "/readOrGetDNList"                       # NN endpoint: Cli POSTs filename and gets DN list
 blockbeat_endpoint = "/BB"                                      # NN endpoint: Cli POSTs filename and gets DN list - is this being used?
-
+err = "ERROR"
 
 def greetings():
     print("\n---------------------------------------------")
@@ -57,12 +57,17 @@ def create_file():
     key = input("Enter an S3 object: ")                         # s3 bucket name: dundermifflin-sufs
     bucket = 'dundermifflin-sufs'                               # hard coded for now
     s3obj = s3.Object(bucket, key)                              # var that represents an s3 object
-    s3_obj_str = s3obj.get()['Body'].read().decode('utf-8')     # data from s3 as a string                  !! CHECK IF FILE EXISTS IN S3 !
+
+    try:
+        s3_obj_str = s3obj.get()['Body'].read().decode('utf-8')     # data from s3 as a string                  !! CHECK IF FILE EXISTS IN S3 !
+    except ClientError as ex:
+        print("ERROR: ", ex)
+        return
 
     # Save save file name and file size into json object
     filename = key
     size = s3obj.content_length
-    file_dict = {"filename": filename,"filesize": size}         # json object with file name and file size
+    file_dict = {"filename": filename, "filesize": size}        # json object with file name and file size
     data_json = json.dumps(file_dict)                           # convert file info dict into json
 
     # Send json object to NameNode and get DN list back as a response
@@ -72,7 +77,8 @@ def create_file():
     response = POST(data_json, NN_addr)                         # POST the file name and size to NN
 
     # check if file already exists (if exists, print error and return)
-    if response.content.decode("utf-8").strip("\"\n") == "ERROR":
+    # if response.content.decode("utf-8").strip("\"\n") == "ERROR":
+    if response is err:
         print("ERROR: cannot write ", filename, "because it already exists.")
         return
 
@@ -81,7 +87,7 @@ def create_file():
     print("NN returned DN list for file:", filename)
     print("Sending file blocks to DNs...\n")
 
-    my_DN_dict = json.loads(json.loads(response.content.decode("utf-8")))   # DN list as a dict
+    my_DN_dict = json.loads(response)  # json.loads(json.loads(response.content.decode("utf-8")))   # DN list as a dict
     file_in_blocks = get_file_in_blocks(s3_obj_str)                         # list of file contents in block-sized str
     i = 0                                                                   # index of file_in_blocks
 
@@ -97,6 +103,7 @@ def create_file():
             for dn in dn_dest_list:
                 block_for_DN = json.dumps({b: block_str})                   # convert string to json
                 print(dn, " ---> ", b)                                      # dn represents the ip:port of DN
+                # print(block_str)
                 POST(block_for_DN, dn)                                      # TODO: change this to DN_IP!!!
 
 
@@ -147,7 +154,9 @@ def read_file():
             payload = {"blockid": block}
             # payload = "bogusid"
             response = requests.get(dn, params=payload)
-            response = response.content.decode("utf-8").strip("\"\n")
+            response = response.content.decode("utf-8")
+            print(json.loads(response))                     # TESTING HERE
+            print("\n\n")
 
             # if you've looped through all dn and you still don't have the data... err!
             if response == "ERROR" and i == (len(ip_list) - 1):
@@ -161,6 +170,7 @@ def read_file():
                 print("------------------------------------------------")
                 print("Block: ", block)
                 print("From data: ", dn)
+                print("type(response)", type(response))
                 read_file.write(response)
                 # print(type(response))
                 print("------------------------------------------------")
@@ -196,14 +206,14 @@ def get_DN_list():
     response = POST(data_json, NN_get_DN_list_addr)                     # POST filename to NN @ "/readOrGetDNList" endpoint
 
     # if, NN returned an ERROR, print error message and return
-    if response.content.decode("utf-8").strip("\"\n") == "ERROR":
+    if response == "ERROR":
         print("\nERROR: This file does not exist")
         err = "ERROR"
         return err, file
 
     # else, print the formatted DN list
     else:
-        return json.loads(response.content.decode("utf-8")), file
+        return json.loads(response), file
 
 
 """
@@ -230,7 +240,7 @@ def GET():
     blockbeat_endpoint_addr = NN_addr + blockbeat_endpoint
     response = requests.get(blockbeat_endpoint_addr)                    # get the DN list from the NN
     if response.status_code != 200:
-        print("POST ERROR ", response)
+        print("GET ERROR ", response)
         return "ERROR"
     else:
         return response.content
@@ -239,38 +249,39 @@ def GET():
 def POST(data, addr):
     response = requests.post(addr, json=data)                            # send data in form of JSON to NN
     if response.status_code != 200:
-        print("POST ERROR ", response)
-        return "ERROR"
+        print("POST ERROR")
+        return err
     else:
-        return response
+        return response.content.decode("utf-8")
 
 
 def main():
 
-    # create_file()                                                     # AKA write
+    create_file()                                                     # AKA write
+    read_file()
 
-    greetings()
-
-    # Loop until user quits with action #4
-    while True:
-
-        # print action selection list
-        action = action_list()
-
-        if action is "1":
-            create_file()
-
-        elif action is "2":
-            read_file()
-
-        elif action is "3":
-            print_DN_list()
-
-        else:
-            break
-
-    # Quit program
-    bye()
+    # # print_DN_list()
+    #
+    # # Loop until user quits with action #4
+    # while True:
+    #
+    #     # print action selection list
+    #     action = action_list()
+    #
+    #     if action is "1":
+    #         create_file()
+    #
+    #     elif action is "2":
+    #         read_file()
+    #
+    #     elif action is "3":
+    #         print_DN_list()
+    #
+    #     else:
+    #         break
+    #
+    # # Quit program
+    # bye()
 
 
 if __name__ == "__main__":
