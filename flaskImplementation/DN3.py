@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_restful import Api, Resource, reqparse, request
-import json
+# import json
+import simplejson as json
 import requests
 
 app = Flask(__name__)
@@ -46,8 +47,18 @@ class DN_server(Resource):
 
         # WRITE
         # receive data as dict from client
-        str_obj = request.data.decode("utf-8")
-        a = json.loads(json.loads(str_obj))                         # data as a dict
+        print("in DN post")
+        # print("request.data.decode(\"utf-8\"): ", request.data.decode("utf-8"))
+        # print("request.data.decode(\"utf-8\")'s type: ", type(request.data.decode("utf-8")))
+
+        # print(type(request.data))
+        a = json.loads(request.data)    # dict - only keep request.data
+        # print("\n", type(a))
+        # for item in a:
+        #     print()
+        #     print(a[item])
+        #     print()
+
         my_blocks.update(a)                                         # add {"blockid":"data"} to my_blocks dict
 
         # test print

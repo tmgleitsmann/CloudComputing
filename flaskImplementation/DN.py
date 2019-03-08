@@ -1,6 +1,8 @@
 from flask import Flask, make_response
 from flask_restful import Api, Resource, reqparse, request
-import json
+# import json
+import simplejson as json
+
 import requests
 
 app = Flask(__name__)
@@ -42,18 +44,21 @@ class DN_server(Resource):
         # else, return ERROR
         else:
             print("I do NOT have block:", blockid, "\n")
-            return "ERROR"
+            return err_message
 
     def post(self):
 
         # WRITE
         # receive data as dict from client
-        a = json.loads(json.loads(request.data.decode("utf-8")))    # dict
-        print("\n", type(a))
-        for item in a:
-            print()
-            print(a[item])
-            print()
+        print("in DN post")
+        # print(type(request.data))
+
+        a = json.loads(request.data)    # dict - only keep request.data
+        # print("\n", type(a))
+        # for item in a:
+        #     print()
+        #     print(a[item])
+        #     print()
 
         my_blocks.update(a)                                         # add {"blockid":"data"} to my_blocks dict
 
