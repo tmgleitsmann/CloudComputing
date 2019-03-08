@@ -1,8 +1,6 @@
 from flask import Flask, make_response
 from flask_restful import Api, Resource, reqparse, request
-# import json
 import simplejson as json
-
 import requests
 
 app = Flask(__name__)
@@ -25,7 +23,6 @@ my_blocks = {}
 class DN_server(Resource):
 
     def get(self):
-
         # get block id sent from client (key = "blockid")
         parser = reqparse.RequestParser()
         parser.add_argument("blockid")                              # name of key
@@ -38,7 +35,6 @@ class DN_server(Resource):
         if blockid in my_blocks.keys():
             print("I HAVE block:", blockid, "\n")
             value = my_blocks[blockid]
-            print("SENDING BLOCK DATA: ", value)
             return value
 
         # else, return ERROR
@@ -49,17 +45,7 @@ class DN_server(Resource):
     def post(self):
 
         # WRITE
-        # receive data as dict from client
-        print("in DN post")
-        # print(type(request.data))
-
-        a = json.loads(request.data)    # dict - only keep request.data
-        # print("\n", type(a))
-        # for item in a:
-        #     print()
-        #     print(a[item])
-        #     print()
-
+        a = json.loads(request.data)
         my_blocks.update(a)                                         # add {"blockid":"data"} to my_blocks dict
 
         # test print
@@ -87,4 +73,5 @@ class DN_server(Resource):
 api.add_resource(DN_server, "/")
 
 if __name__ == "__main__":
+    # add thread here
     app.run(port='6000')

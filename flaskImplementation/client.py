@@ -1,6 +1,5 @@
 import requests
 import boto3
-# import json
 import simplejson as json
 import base64
 from botocore.exceptions import ClientError
@@ -53,28 +52,29 @@ def write_file():
     print("WRITE")
     print("------\n")
 
-    # FIXME: validate user input & get rid of hard coded stuff
-    # get name of S3 object from user to create in SUFS                     ! TODO: validate user input !
-    filename = input("Enter an S3 object: ")                                # s3 bucket name: dundermifflin-sufs
+    # get S3 object path from user
+    filename = input("Enter an S3 object path: ")                           # s3 bucket name: dundermifflin-sufs
+
+    # UNCOMMETED FOR NOW FOR SO WE DON'T HAVE TO TYPE OUT WHOLE PATH
+    # path_list = filename.split("/", 1)                                    # check that a bucket and file were given
+    # if len(path_list) < 2:
+    #     print("You must include the bucket and file.")
+    #     return
+    #
+    # bucket = path_list[0]
+    # filename = path_list[1]
+    # print("bucket ", bucket)
+    # print("path   ", filename)
     bucket = 'dundermifflin-sufs'                                           # hard coded for now
     s3obj = s3.Object(bucket, filename)                                     # var that represents an s3 object
-    image = s3obj.get()['Body'].read()
-    print("Data type of s3 object: ", type(image))
 
-    # try:
-    #     s3_obj_str = s3obj.get()['Body'].read().decode('utf-8')             # data from s3 as a string
-    #
-    # except ClientError as ex:
-    #     print("ERROR: the s3 file path you entered is not valid.")          # return if given invalid s3 file path
-    #     print(ex)
-    #     return
-    # except UnicodeDecodeError as ex:
-    #     print("ERROR: You gave me a binary file!")
-    #     print(ex)
-    #     return
-    # else:
-    #     print("YOU'RE IN THE ELSE")
-    #     return
+    try:
+        image = s3obj.get()['Body'].read()
+
+    except ClientError as ex:
+        print("ERROR: the s3 file path you entered is not valid.")          # return if given invalid s3 file path
+        print(ex)
+        return
 
     # Save save file name and file size into json object
     size = s3obj.content_length
@@ -98,7 +98,6 @@ def write_file():
     print("Sending file blocks to DNs...\n")
 
     my_DN_dict = json.loads(response)                                       # DN list as a dict
-    # file_in_blocks = get_file_in_blocks(s3_obj_str)                         # get list of file contents in Nsized chunks
     file_in_blocks = get_file_list_in_blocks(image)
 
     i = 0                                                                   # index of file_in_blocks
@@ -106,8 +105,7 @@ def write_file():
     for f in my_DN_dict:
         for b in my_DN_dict[f]:
             print("\nSending block: ", b)
-            # byte_block_ = file_in_blocks[i]
-            block_for_DN = {b: base64.b64encode(file_in_blocks[i])}                                  # convert string to json# get next chunk of file
+            block_for_DN = {b: base64.b64encode(file_in_blocks[i])}         # get next chunk of file
             print("block_for_DN type: ", type(block_for_DN))
             i = i + 1
             dn_dest_list = my_DN_dict[f][b].strip(" ").split(" ")           # convert DN str to DN list
@@ -115,11 +113,9 @@ def write_file():
             # for each DN in the DN list, send {blockid: data}
             for dn in dn_dest_list:
 
-            #     # block_for_DN = base64.b64encode({b: byte_block})                   # convert string to json
-            #     # block_for_DN = json.dumps({b: byte_block})                   # convert string to json
                 print(dn, " ---> ", b)                                      # dn represents the ip:port of DN
                 data = block_for_DN
-                POST(data, dn)                                      # TODO: change this to DN_IP!!!
+                POST(data, dn)                                              # TODO: change this to DN_IP!!!
 
 
 def get_file_list_in_blocks(file):
@@ -167,7 +163,7 @@ def read_file():
 
     total_bytes = 0                                                         # track how many bytes are read
 
-    read_file = open(file, "wb")                                             # create file and save in local directory
+    read_file = open(file.replace("/", ""), "wb")                           # create file and save in local directory
 
     for block in dn_list:                                                   # Loop through each block in DN list
         uncleaned_list = dn_list[block].split(" ")
@@ -181,11 +177,7 @@ def read_file():
             # payload = "bogusid"
             response = GET(payload, dn)                                     # GET block from DN or err if does not exist
             print("response type: ", type(response))
-            # print("response type: ", type(json.loads(response)))
-            # print("response: ", response)
-            # response = json.loads(base64.decode(response))
             response = base64.b64decode(json.loads(response))
-
 
             # if you've looped through all dn and you still don't have the data... error!
             if response == err and i == (len(ip_list) - 1):
@@ -285,7 +277,6 @@ Parameters:
 def POST(data, addr):
     print("before posting ")
     print("sending...")
-    # print(data)
     response = requests.post(addr, json=data)                               # send data to addr
 
     if response.status_code != 200:

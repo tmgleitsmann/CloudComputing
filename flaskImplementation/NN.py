@@ -1,7 +1,6 @@
 from flask import Flask, jsonify, make_response
 from flask_restful import Api, Resource, reqparse, request
 import requests
-# import json
 import simplejson as json
 import datetime
 
@@ -29,9 +28,9 @@ class NN_server(Resource):
     def get(self):
 
         parser = reqparse.RequestParser()
-        parser.add_argument("filename")                              # name of key
+        parser.add_argument("filename")                                 # name of key
         args = parser.parse_args()
-        filename = args["filename"]                                   # payload from client containing block id
+        filename = args["filename"]                                     # payload from client containing block id
 
         print("\nClient requested file: ", filename, " - checking if I have it...", end="")
 
@@ -44,18 +43,7 @@ class NN_server(Resource):
         # else, return ERROR
         else:
             print("I do NOT have file:", filename, "\n")
-            return "ERROR"
-    #             # get the file name from POST request
-    #         bb = json.loads(request.data.decode("utf-8"))
-    #         file = bb["filename"]
-    #
-    #         # if file exists in my master DN list, return the DN list associated with it
-    #         if file in master_DNlists_dict:
-    #             return master_DNlists_dict[file]
-    #
-    #         # else, return error message
-    #         else:
-    #             return err_message
+            return err_message
 
     def post(self):
 
@@ -148,29 +136,10 @@ class BlockBeats(Resource):
         print()
 
 
-# class read_or_get_DN_list(Resource):
-#
-#     # For client's "get DN list" operation.
-#     # Client will POST a file name. If file exists, return DN list. Else, return "ERROR"
-#     def post(self):
-#
-#         # get the file name from POST request
-#         bb = json.loads(request.data.decode("utf-8"))
-#         file = bb["filename"]
-#
-#         # if file exists in my master DN list, return the DN list associated with it
-#         if file in master_DNlists_dict:
-#             return master_DNlists_dict[file]
-#
-#         # else, return error message
-#         else:
-#             return err_message
-
-
 api.add_resource(NN_server, "/")
 api.add_resource(BlockBeats, "/BB")
-# api.add_resource(read_or_get_DN_list, "/readOrGetDNList")
 
 
 if __name__ == "__main__":
+    # add thread here
     app.run(port='5000')

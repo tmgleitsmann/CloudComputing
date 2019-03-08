@@ -1,6 +1,5 @@
 from flask import Flask
 from flask_restful import Api, Resource, reqparse, request
-# import json
 import simplejson as json
 import requests
 
@@ -41,24 +40,12 @@ class DN_server(Resource):
         # else, return ERROR
         else:
             print("I do NOT have block:", blockid, "\n")
-            return "ERROR"
+            return err_message
 
     def post(self):
 
         # WRITE
-        # receive data as dict from client
-        print("in DN post")
-        # print("request.data.decode(\"utf-8\"): ", request.data.decode("utf-8"))
-        # print("request.data.decode(\"utf-8\")'s type: ", type(request.data.decode("utf-8")))
-
-        # print(type(request.data))
-        a = json.loads(request.data)    # dict - only keep request.data
-        # print("\n", type(a))
-        # for item in a:
-        #     print()
-        #     print(a[item])
-        #     print()
-
+        a = json.loads(request.data)
         my_blocks.update(a)                                         # add {"blockid":"data"} to my_blocks dict
 
         # test print
@@ -85,4 +72,5 @@ class DN_server(Resource):
 api.add_resource(DN_server, "/")
 
 if __name__ == "__main__":
+    # add thread here
     app.run(port='6002')
