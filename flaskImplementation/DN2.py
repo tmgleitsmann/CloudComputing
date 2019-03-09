@@ -47,10 +47,10 @@ class DN_server(Resource):
                 value = my_blocks[blockid]
                 return value
 
-        # Else, return ERROR
-        else:
-            print("I do NOT have block:", blockid, "\n")
-            return err_message
+            # Else, return ERROR
+            else:
+                print("I do NOT have block:", blockid, "\n")
+                return err_message
 
     def post(self):
 
