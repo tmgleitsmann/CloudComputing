@@ -4,6 +4,9 @@ import requests
 import simplejson as json
 import datetime
 import time
+import threading
+import atexit
+
 
 app = Flask(__name__)
 api = Api(app)
@@ -23,7 +26,15 @@ block_size = 64000000                                                   # TODO: 
 replication_factor = 2
 err_code = 400
 err_message = "ERROR"
-timeout = 30                                                            # timeout in sec when a node considered failed
+
+# Lock to control access to data
+DN_List_Lock = threading.Lock()
+BB_Lock = threading.Lock()
+# Thread handler
+yourThread = threading.Thread()
+# Time between blockbeats
+wait_time = 30
+
 
 class NN_server(Resource):
 
@@ -118,6 +129,9 @@ class BlockBeats(Resource):
         # display who send the block report and what the block report contains
         print("Block report from:", sender_addr)
         print(block_list, "\n")
+        print("My BB list: ")
+        for key in master_heartbeat_dict.keys():
+            print(key, " --> ", master_heartbeat_dict[key])
 
         # update master DN list
         for dn_b in block_list:
@@ -135,34 +149,61 @@ class BlockBeats(Resource):
         print()
 
 
+# THREAD - CHECKS BB LIST AND MAINTAINS FAULT TOLERANCE
+
+def interrupt():
+    global yourThread
+    yourThread.cancel()
+
 
 # NN CHECKING IF A DN HAS TIMED OUT - check bb table and removes from master DN list if failure
-# # Checks block beat table to see if a blockid has not sent a block report in 30 seconds
-# def check_bb_table():
-#     for DN_addr in master_heartbeat_dict.keys():
-#         elapsed = datetime.datetime.now() - master_heartbeat_dict[DN_addr]
-#         if elapsed > datetime.timedelta(seconds=timeout):
-#             print("DN FAILURE: ", DN_addr, " has failed! No block report for ", elapsed, ".")
-#             remove_blockid_from_master_list(DN_addr)
-#
-#
-# # from the given address from the master DN list
-# def remove_blockid_from_master_list(DN_addr):
-#     seperator = " "
-#
-#     for f in master_DNlists_dict:                               # check every file
-#         print("FILE: ", f)
-#         for b in master_DNlists_dict[f]:                        # check every block of a file
-#             ip_list = master_DNlists_dict[f][b].split()
-#             print(ip_list)
-#             if DN_addr in ip_list:                              # check if blockid string is in ip string
-#                 ip_list.remove(DN_addr)                         # remove the addr from the ip str
-#                 new_ip_str = seperator.join(ip_list)
-#                 master_DNlists_dict[f][b] = new_ip_str
+# Checks block beat table to see if a blockid has not sent a block report in 30 seconds
+def check_bb_table():
+
+    print("IN OTHER THREAD")
+    # Do initialisation stuff here
+    global yourThread
+
+    # Send block report to NN
+    with BB_Lock:
+
+        for DN_addr in master_heartbeat_dict.keys():
+            elapsed = datetime.datetime.now() - master_heartbeat_dict[DN_addr]
+            print("current time  ", datetime.datetime.now())
+            print("DN's BB time  ", master_heartbeat_dict[DN_addr])
+            print(DN_addr, "elapsed  ", elapsed)
+            if elapsed > datetime.timedelta(seconds=wait_time):
+                print("DN FAILURE: ", DN_addr, " has failed! No block report for ", elapsed, ".")
+                update_masterDN_maintain_replication(DN_addr)   # Call the HELPER
+
+    yourThread = threading.Timer(wait_time, check_bb_table)
+    yourThread.start()
 
 
+# HELPER: from the given address from the master DN list
+def update_masterDN_maintain_replication(DN_addr):
+
+    seperator = " "
+
+    with DN_List_Lock and BB_Lock:
+
+        for f in master_DNlists_dict:                               # check every file
+            print("\nFILE: ", f)
+            for b in master_DNlists_dict[f]:                        # check every block of a file
+                ip_list = master_DNlists_dict[f][b].split()
+                print("before: ", ip_list)
+                if DN_addr in ip_list:                              # check if blockid string is in ip string
+                    ip_list.remove(DN_addr)                         # remove the addr from the ip str
+                    print("REMOVE FAILED DN: ", ip_list)
+                    new_ip_str = seperator.join(ip_list)
+                    master_DNlists_dict[f][b] = new_ip_str
+                    # TODO - add parts for maintain replication factor
 
 
+# Initialize blockBeat thread
+check_bb_table()
+# When you kill Flask (SIGTERM), clear the trigger for the next thread
+atexit.register(interrupt)
 
 
 api.add_resource(NN_server, "/")
@@ -170,5 +211,4 @@ api.add_resource(BlockBeats, "/BB")
 
 
 if __name__ == "__main__":
-    # add thread here
     app.run(port='5000')
