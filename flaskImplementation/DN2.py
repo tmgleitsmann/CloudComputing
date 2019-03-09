@@ -1,7 +1,9 @@
 from flask import Flask
 from flask_restful import Api, Resource, reqparse, request
 import simplejson as json
+import threading
 import requests
+import atexit
 
 app = Flask(__name__)
 api = Api(app)
@@ -17,60 +19,78 @@ blockbeat = "/BB"
 err_code = 400
 err_message = "ERROR"
 
+# Lock to control access to data
+dataLock = threading.Lock()
+# Thread handler
+yourThread = threading.Thread()
+# Time between blockbeats
+wait_time = 10
+
 my_blocks = {}
 
 
 class DN_server(Resource):
 
     def get(self):
-        # get block id sent from client (key = "blockid")
+        # Get block id sent from client (key = "blockid")
         parser = reqparse.RequestParser()
-        parser.add_argument("blockid")                              # name of key
+        parser.add_argument("blockid")                              # Name of key
         args = parser.parse_args()
-        blockid = args["blockid"]                                   # payload from client containing block id
+        blockid = args["blockid"]                                   # Payload from client containing block id
 
         print("\nClient requested block: ", blockid, " - checking if I have it...", end="")
 
-        # if I have the block id, send the data back
-        if blockid in my_blocks.keys():
-            print("I HAVE block:", blockid, "\n")
-            value = my_blocks[blockid]
-            return value
+        with dataLock:
+            # If I have the block id, send the data back
+            if blockid in my_blocks.keys():
+                print("I HAVE block:", blockid, "\n")
+                value = my_blocks[blockid]
+                return value
 
-        # else, return ERROR
+        # Else, return ERROR
         else:
             print("I do NOT have block:", blockid, "\n")
             return err_message
 
     def post(self):
 
-        # WRITE
-        a = json.loads(request.data)
-        my_blocks.update(a)                                         # add {"blockid":"data"} to my_blocks dict
+        with dataLock:
+            # Write
+            a = json.loads(request.data)
+            my_blocks.update(a)                                         # Add {"blockid":"data"} to my_blocks dict
 
-        # test print
-        print("I have blocks: ", end="")
-        for blockid in my_blocks.keys():
-            print(blockid, "  ", end="")
-        print()
+            # Test print
+            print("I have blocks: ", end="")
+            for blockid in my_blocks.keys():
+                print(blockid, "  ", end="")
+            print()
 
+        # # Send block report
+        # response = requests.post(NN_BB_addr, json=block_report)     # Send my blocks as a list to NN
+        #
+        # if response.status_code != 200:
+        #     print("ERROR: Error in sending block report to NN")
+        # else:
+        #     print("SUCCESS: Sent block report to NN\n")
+        # return request.data.decode("utf-8")
+
+    def blockBeat(self):
         # Send block report to NN
-        NN_BB_addr = NN_addr + blockbeat                            # address of NN + block beat end point --> "/BB"
-        block_report = {
-            "DN_addr": my_addr,
-            "block_report": list(my_blocks.keys())
-        }
-        response = requests.post(NN_BB_addr, json=block_report)     # send my blocks as a list to NN
+        with dataLock:
+            NN_BB_addr = NN_addr + blockbeat # Address of NN + block beat end point --> "/BB"
+            block_report = {"block_report": list(my_blocks.keys())}
 
-        if response.status_code != 200:
-            print("ERROR: Error in sending block report to NN")
-        else:
-            print("SUCCESS: Sent block report to NN\n")
-        return request.data.decode("utf-8")
-
+        yourThread = threading.Timer(wait_time, blockBeat, ())
+        yourThread.start()
 
 api.add_resource(DN_server, "/")
 
 if __name__ == "__main__":
-    # add thread here
-    app.run(port='6001')
+    # Do initialisation stuff here
+    global yourThread
+    # Create your thread
+    yourThread = threading.Timer(wait_time, blockBeat, ())
+    yourThread.start()
+
+    # Run main program
+    app.run(port)
