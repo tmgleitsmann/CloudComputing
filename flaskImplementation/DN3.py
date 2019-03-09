@@ -73,28 +73,28 @@ class DN_server(Resource):
         #     print("SUCCESS: Sent block report to NN\n")
         # return request.data.decode("utf-8")
 
-    def interrupt():
-        global yourThread
-        yourThread.cancel()
+def interrupt():
+    global yourThread
+    yourThread.cancel()
 
-    def blockBeat():
-        # Do initialisation stuff here
-        global yourThread
-        # Send block report to NN
-        with dataLock:
-            NN_BB_addr = NN_addr + blockbeat # Address of NN + block beat end point --> "/BB"
-            block_report = {"block_report": list(my_blocks.keys())}
+def blockBeat():
+    # Do initialisation stuff here
+    global yourThread
+    # Send block report to NN
+    with dataLock:
+        NN_BB_addr = NN_addr + blockbeat # Address of NN + block beat end point --> "/BB"
+        block_report = {"block_report": list(my_blocks.keys())}
 
-        yourThread = threading.Timer(wait_time, blockBeat, ())
-        yourThread.start()
+    yourThread = threading.Timer(wait_time, blockBeat)
+    yourThread.start()
 
-    # Initialize blockBeat thread
-    blockBeat()
-    # When you kill Flask (SIGTERM), clear the trigger for the next thread
-    atexit.register(interrupt)
+# Initialize blockBeat thread
+blockBeat()
+# When you kill Flask (SIGTERM), clear the trigger for the next thread
+atexit.register(interrupt)
 
 api.add_resource(DN_server, "/")
 
 if __name__ == "__main__":
     # Run main program
-    app.run(port)
+    app.run(port = port)
