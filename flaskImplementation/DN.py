@@ -85,6 +85,13 @@ def blockBeat():
         NN_BB_addr = NN_addr + blockbeat # Address of NN + block beat end point --> "/BB"
         block_report = {"block_report": list(my_blocks.keys())}
 
+    response = requests.post(NN_BB_addr, json=block_report)     # Send my blocks as a list to NN
+
+    if response.status_code != 200:
+        print("ERROR: Error in sending block report to NN")
+    else:
+        print("SUCCESS: Sent block report to NN\n")
+
     yourThread = threading.Timer(wait_time, blockBeat)
     yourThread.start()
 
