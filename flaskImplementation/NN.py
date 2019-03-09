@@ -3,6 +3,7 @@ from flask_restful import Api, Resource, reqparse, request
 import requests
 import simplejson as json
 import datetime
+import time
 
 app = Flask(__name__)
 api = Api(app)
@@ -22,6 +23,7 @@ block_size = 64000000                                                   # TODO: 
 replication_factor = 2
 err_code = 400
 err_message = "ERROR"
+timeout = 30                                                            # timeout in sec when a node considered failed
 
 class NN_server(Resource):
 
@@ -47,15 +49,11 @@ class NN_server(Resource):
 
     def post(self):
 
+        # these are the files that NN currently has
         files_list = master_DNlists_dict.keys()
 
         # get file name and size from client
-        print("data from client...")
         cli_data = json.loads(json.loads(request.data.decode("utf-8")))
-
-        # # cli_data = json.loads(json.loads(request.data.decode("utf-8")))
-        # print(cli_data)
-        # print(type(cli_data))
         filename = cli_data['filename']
         filesize = cli_data['filesize']
 
@@ -102,15 +100,16 @@ class NN_server(Resource):
 
 class BlockBeats(Resource):
 
-    # def get(self):
-    #     return master_DNlists_dict#"GET response from BlockBeats class"
-
     # For DN's block report / heart beat.
     # DN will POST its address and a list of block ids. Use this info to update master DN list.
     def post(self):
 
         bb = json.loads(request.data.decode("utf-8"))           # POST data from DN
         sender_addr = bb["DN_addr"]                             # sender's address (IP + port)
+        # remote_ip = request.environ['REMOTE_ADDR']
+        # remote_port = request.environ['REMOTE_PORT']
+        # print("remote_ip:   ", remote_ip)
+        # print("remote_port: ", remote_port)
         block_list = bb["block_report"]                         # get list of blocks that this DN currently has
 
         # update master heart beat list with DN's IP and current time stamp
@@ -124,7 +123,7 @@ class BlockBeats(Resource):
         for dn_b in block_list:
             for f in master_DNlists_dict:
                 for b in master_DNlists_dict[f]:
-                    ip_list = master_DNlists_dict[f][b].split(" ")
+                    ip_list = master_DNlists_dict[f][b].split()
                     if b == dn_b and sender_addr not in ip_list:
                         master_DNlists_dict[f][b] = master_DNlists_dict[f][b] + " " + sender_addr + " "
 
@@ -134,6 +133,36 @@ class BlockBeats(Resource):
             for b in master_DNlists_dict[f]:
                 print("\tblock: ", b, " --> ", master_DNlists_dict[f][b])
         print()
+
+
+
+# NN CHECKING IF A DN HAS TIMED OUT - check bb table and removes from master DN list if failure
+# # Checks block beat table to see if a blockid has not sent a block report in 30 seconds
+# def check_bb_table():
+#     for DN_addr in master_heartbeat_dict.keys():
+#         elapsed = datetime.datetime.now() - master_heartbeat_dict[DN_addr]
+#         if elapsed > datetime.timedelta(seconds=timeout):
+#             print("DN FAILURE: ", DN_addr, " has failed! No block report for ", elapsed, ".")
+#             remove_blockid_from_master_list(DN_addr)
+#
+#
+# # from the given address from the master DN list
+# def remove_blockid_from_master_list(DN_addr):
+#     seperator = " "
+#
+#     for f in master_DNlists_dict:                               # check every file
+#         print("FILE: ", f)
+#         for b in master_DNlists_dict[f]:                        # check every block of a file
+#             ip_list = master_DNlists_dict[f][b].split()
+#             print(ip_list)
+#             if DN_addr in ip_list:                              # check if blockid string is in ip string
+#                 ip_list.remove(DN_addr)                         # remove the addr from the ip str
+#                 new_ip_str = seperator.join(ip_list)
+#                 master_DNlists_dict[f][b] = new_ip_str
+
+
+
+
 
 
 api.add_resource(NN_server, "/")
