@@ -64,16 +64,6 @@ class DN_server(Resource):
                 print(blockid, "  ", end="")
             print()
 
-        # # Send block report
-        # response = requests.post(NN_BB_addr, json=block_report)     # Send my blocks as a list to NN
-        #
-        # if response.status_code != 200:
-        #     print("ERROR: Error in sending block report to NN")
-        # else:
-        #     print("SUCCESS: Sent block report to NN\n")
-        # return request.data.decode("utf-8")
-
-
 def interrupt():
     global yourThread
     yourThread.cancel()

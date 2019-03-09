@@ -64,15 +64,6 @@ class DN_server(Resource):
                 print(blockid, "  ", end="")
             print()
 
-        # # Send block report
-        # response = requests.post(NN_BB_addr, json=block_report)     # Send my blocks as a list to NN
-        #
-        # if response.status_code != 200:
-        #     print("ERROR: Error in sending block report to NN")
-        # else:
-        #     print("SUCCESS: Sent block report to NN\n")
-        # return request.data.decode("utf-8")
-
 def interrupt():
     global yourThread
     yourThread.cancel()
@@ -87,7 +78,6 @@ def blockBeat():
             "DN_addr": my_addr,
             "block_report": list(my_blocks.keys())
         }
-
     response = requests.post(NN_BB_addr, json=block_report)     # Send my blocks as a list to NN
 
     if response.status_code != 200:
@@ -106,5 +96,4 @@ atexit.register(interrupt)
 api.add_resource(DN_server, "/")
 
 if __name__ == "__main__":
-    # Run main program
     app.run(port = port)
