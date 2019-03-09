@@ -83,8 +83,10 @@ def blockBeat():
     # Send block report to NN
     with dataLock:
         NN_BB_addr = NN_addr + blockbeat # Address of NN + block beat end point --> "/BB"
-        block_report = {"block_report": list(my_blocks.keys())}
-
+        block_report = {
+            "DN_addr": my_addr,
+            "block_report": list(my_blocks.keys())
+        }
     response = requests.post(NN_BB_addr, json=block_report)     # Send my blocks as a list to NN
 
     if response.status_code != 200:
