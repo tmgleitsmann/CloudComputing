@@ -105,5 +105,4 @@ atexit.register(interrupt)
 api.add_resource(DN_server, "/")
 
 if __name__ == "__main__":
-    # Run main program
     app.run(port = port)
