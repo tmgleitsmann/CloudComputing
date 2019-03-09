@@ -13,7 +13,7 @@ parser.add_argument('file')
 
 NN_addr = "http://127.0.0.1:5000"
 my_addr = "http://127.0.0.1:6002"
-localhost = "http://127.0.0.1"                          #THIS NEEDS TO CHANGE TO NAME NODE IP
+localhost = "http://127.0.0.1"    #THIS NEEDS TO CHANGE TO NAME NODE IP
 port = "6002"
 blockbeat = "/BB"
 err_code = 400
