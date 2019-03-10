@@ -12,10 +12,9 @@ parser = reqparse.RequestParser()
 parser.add_argument('file')
 
 # Global variables
-NN_addr = "http://127.0.0.1:5000"
-my_addr = "http://127.0.0.1:6000"
-localhost = "http://127.0.0.1"    #THIS NEEDS TO CHANGE TO NAME NODE IP
-port = "6000"
+NN_addr = "http://"                                                            # !! insert NN ip here !!
+# my_addr = "http://127.0.0.1:6000"
+port = 5000
 blockbeat = "/BB"
 err_code = 400
 err_message = "ERROR"
@@ -93,17 +92,15 @@ def interrupt():
     global yourThread
     yourThread.cancel()
 
+
 def blockBeat():
-    # Do initialisation stuff here
-    global yourThread
+    global yourThread                                                   # Do initialisation stuff here
+
     # Send block report to NN
     with dataLock:
         NN_BB_addr = NN_addr + blockbeat # Address of NN + block beat end point --> "/BB"
-        block_report = {
-            "DN_addr": my_addr,
-            "block_report": list(my_blocks.keys())
-        }
-    response = requests.post(NN_BB_addr, json=block_report)     # Send my blocks as a list to NN
+        block_report = {"block_report": list(my_blocks.keys())}
+    response = requests.post(NN_BB_addr, json=block_report)             # Send my blocks as a list to NN
 
     if response.status_code != 200:
         print("ERROR: Error in sending block report to NN")
@@ -113,14 +110,14 @@ def blockBeat():
     yourThread = threading.Timer(wait_time, blockBeat)
     yourThread.start()
 
-# Initialize blockBeat thread
-blockBeat()
-# When you kill Flask (SIGTERM), clear the trigger for the next thread
-atexit.register(interrupt)
+
+blockBeat()                                     # Initialize blockBeat thread
+atexit.register(interrupt)                      # When you kill Flask (SIGTERM), clear the trigger for the next thread
+
 
 api.add_resource(DN_server, "/")
 api.add_resource(data_from_NN, fault_tolerance)
 
 
 if __name__ == "__main__":
-    app.run(port = port)
+    app.run(port=port)

@@ -6,10 +6,10 @@ from botocore.exceptions import ClientError
 
 
 # Global variables
+NN_addr = "http://"                                             # ! hard coded for now !
 s3 = boto3.resource('s3')                                       # for accessing s3 on a write
 block_size = 64000000                                           # 64 MB
 replication_factor = 2
-NN_addr = "http://127.0.0.1:5000"                               # ! hard coded for now !
 err = "ERROR"
 
 

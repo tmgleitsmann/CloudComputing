@@ -25,6 +25,7 @@ master_heartbeat_dict = {}                                              # master
 block_size = 64000000                                                   # TODO: change from B to MB
 replication_factor = 2
 err_code = 400
+port = 5000
 err_message = "ERROR"
 fault_tolerance = "/FT"                                                 # listen for POSTs from NN
 
@@ -116,7 +117,8 @@ class BlockBeats(Resource):
     def post(self):
 
         bb = json.loads(request.data.decode("utf-8"))           # POST data from DN
-        sender_addr = bb["DN_addr"]                             # sender's address (IP + port)
+        # sender_addr = bb["DN_addr"]                             # sender's address (IP + port)
+        sender_addr = request.environ['REMOTE_ADDR'] + port
         # remote_ip = request.environ['REMOTE_ADDR']
         # remote_port = request.environ['REMOTE_PORT']
         # print("remote_ip:   ", remote_ip)
@@ -228,4 +230,4 @@ api.add_resource(BlockBeats, "/BB")
 
 
 if __name__ == "__main__":
-    app.run(port='5000')
+    app.run(port=port)
