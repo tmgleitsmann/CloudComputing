@@ -15,7 +15,7 @@ parser = reqparse.RequestParser()                                       # JSON p
 parser.add_argument('file')
 
 # temp list of DN IPs -- FIX to heart beat list
-DN_IP = ["http://127.0.0.1:6000", "http://127.0.0.1:6001", "http://127.0.0.1:6002"]
+# DN_IP = ["http://127.0.0.1:6000", "http://127.0.0.1:6001", "http://127.0.0.1:6002"]
 
 # NN data
 master_DNlists_dict = {}                                                # master list of all DN lists
@@ -88,11 +88,13 @@ class NN_server(Resource):
         for block in blockid_list:                              # make a DN list for each blockid in file
             dn_str = ""
             for i in range(0, replication_factor):              # assign N # of DNs per blockid
-                ip = DN_IP[(rr_index + i) % len(DN_IP)]         # round robin assignment
+                dn_ip_list = list(master_heartbeat_dict.keys())
+                ip = dn_ip_list[(rr_index + i) % len(dn_ip_list)] # round robin assignment
+                # ip = DN_IP[(rr_index + i) % len(DN_IP)]         # round robin assignment
                 dn_str = dn_str + ip + " "
                 # dn_list.append(ip)
 
-            rr_index = (rr_index + 1) % len(DN_IP)              # increment the rr_index or wraps back around
+            rr_index = (rr_index + 1) % len(dn_ip_list)         # increment the rr_index or wraps back around
             block_json.update({block: dn_str})                  # update block_json for client
             block_json_emptylist.update({block: empty_str})     # update block_json_emptyList to store locally
 
