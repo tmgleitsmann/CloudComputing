@@ -12,8 +12,7 @@ parser = reqparse.RequestParser()
 parser.add_argument('file')
 
 # Global variables
-NN_addr = "http://"                                                            # !! insert NN ip here !!
-# my_addr = "http://127.0.0.1:6000"
+NN_addr = "http://:5000"                                               # TODO: insert NN IP ADDR HERE
 port = 5000
 blockbeat = "/BB"
 err_code = 400

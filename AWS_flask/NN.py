@@ -14,9 +14,6 @@ api = Api(app)
 parser = reqparse.RequestParser()                                       # JSON parser
 parser.add_argument('file')
 
-# temp list of DN IPs -- FIX to heart beat list
-# DN_IP = ["http://127.0.0.1:6000", "http://127.0.0.1:6001", "http://127.0.0.1:6002"]
-
 # NN data
 master_DNlists_dict = {}                                                # master list of all DN lists
 master_heartbeat_dict = {}                                              # master list for block reports / heart beats
