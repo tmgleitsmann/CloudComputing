@@ -44,7 +44,7 @@ class NN_server(Resource):
         args = parser.parse_args()
         filename = args["filename"]                                     # payload from client containing block id
 
-        print("\nClient requested file: ", filename, " - checking if I have it...", end="")
+        print("\nClient requested file: ", filename, " - checking if I have it...")#, end="")
 
         # if I have the file, send the DN list back
         if filename in master_DNlists_dict.keys():
@@ -117,12 +117,7 @@ class BlockBeats(Resource):
     def post(self):
 
         bb = json.loads(request.data.decode("utf-8"))           # POST data from DN
-        # sender_addr = bb["DN_addr"]                             # sender's address (IP + port)
-        sender_addr = request.environ['REMOTE_ADDR'] + port
-        # remote_ip = request.environ['REMOTE_ADDR']
-        # remote_port = request.environ['REMOTE_PORT']
-        # print("remote_ip:   ", remote_ip)
-        # print("remote_port: ", remote_port)
+        sender_addr = "http://" + request.environ['REMOTE_ADDR'] + ":" + str(port)
         block_list = bb["block_report"]                         # get list of blocks that this DN currently has
 
         # update master heart beat list with DN's IP and current time stamp
@@ -209,8 +204,8 @@ def check_bb_table():
                         sender_DN = ip_list[0]                                  # hard coded to get first DN  ??
                         recv_DN = available_DNs_list[0]                         # hard coded to get first DN  ??
                         blockid = b
-                        print("Maintaining Replication factor -- sender DN: ", sender_DN, end="")
-                        print(" -- recv DN: ", recv_DN, end="")
+                        print("Maintaining Replication factor -- sender DN: ", sender_DN)#, end="")
+                        print(" -- recv DN: ", recv_DN)#, end="")
                         print(" -- block: ", blockid, "\n")
                         sender_DN_endpoint_addr = sender_DN + fault_tolerance
                         data = json.dumps({blockid: recv_DN})
@@ -230,4 +225,4 @@ api.add_resource(BlockBeats, "/BB")
 
 
 if __name__ == "__main__":
-    app.run(port=port)
+    app.run(host='0.0.0.0', port=port)

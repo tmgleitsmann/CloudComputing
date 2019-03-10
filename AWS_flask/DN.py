@@ -61,7 +61,7 @@ class DN_server(Resource):
         args = parser.parse_args()
         blockid = args["blockid"]                                   # Payload from client containing block id
 
-        print("\nClient requested block: ", blockid, " - checking if I have it... ", end="")
+        print("\nClient requested block: ", blockid, " - checking if I have it... ")#, end="")
 
         with dataLock:
             # If I have the block id, send the data back
@@ -120,4 +120,4 @@ api.add_resource(data_from_NN, fault_tolerance)
 
 
 if __name__ == "__main__":
-    app.run(port=port)
+    app.run(host='0.0.0.0', port=port)
