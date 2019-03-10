@@ -1,14 +1,19 @@
 import requests
 import boto3
 import json
+import base64
+from flask import request
+from os import environ
 
 s3 = boto3.resource('s3')
-local_host = "http://127.0.0.1:4000"  # ! hard coded for now !
+# local_host = "http://127.0.0.1:4000"  # ! hard coded for now !
+server_addr = environ['server_addr']
+print("\nSERVER'S ADDR:", server_addr, "\n")
 
 
 def GET(data):
     if data is None:
-        response = requests.get(local_host, params=data)  # get the DN list from the NN
+        response = requests.get(server_addr, params=data)  # get the DN list from the NN
         if response.status_code != 200:
             print("GET ERROR ", response)
             return "ERROR"
@@ -16,7 +21,7 @@ def GET(data):
             return response
 
     else:
-        response = requests.get(local_host, params=data)  # get the DN list from the NN
+        response = requests.get(server_addr, params=data)  # get the DN list from the NN
         if response.status_code != 200:
             print("GET ERROR ", response)
             return "ERROR"
@@ -35,39 +40,24 @@ def POST(data):
 
 def main():
 
-    # TEST BOTO3 and FORMAT OF DATA
-    # ------------------------------
-    bucket = 'dundermifflin-sufs'
-    key = "sample_us.tsv"
-    s3obj = s3.Object(bucket, key)
-    s3_obj_str = s3obj.get()['Body'].read().decode('utf-8')                 # TODO: check if file exists
-    print(s3_obj_str)
-    test_data = json.dumps({"blockid": s3_obj_str})
-
-    # SEND FILE NAME AND FILE SIZE
-    # filename = key
-    # size = s3obj.content_length
-    # file_dict = {"filename": filename, "filesize": size}                    # json object with file name and file size
-    # data_json = json.dumps(file_dict)                                       # convert file info dict into json
-
-
     # TEST GET
     # ---------
-    # print("\nCalling GET...")
-    # payload = {"data": "Hello from the client"}
-    # response = GET(payload)
-    # print(response.content.decode("utf-8"))
-    # # print(response.content.decode("utf-8"))
+    print("\nCalling GET...")
+    payload = {"data": "Hello from the client"}
+    response = GET(payload)
+    print(response.content.decode("utf-8"))
 
 
     # TEST POST
     # ---------
     print("\nCalling POST...")
-    # data = {
-    #     "a": "apple",
-    #     "b": "banana"
-    # }
-    response = POST(test_data)
+    data = {
+        "a": "apple",
+        "b": "banana"
+    }
+
+    data = json.dumps(data)
+    response = POST(data)
     print(response.content.decode("utf-8"))
 
 if __name__ == "__main__":

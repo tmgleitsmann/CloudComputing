@@ -1,4 +1,4 @@
-from flask import Flask, make_response
+from flask import Flask, make_response, request
 from flask_restful import Api, Resource, reqparse, request
 import json
 
@@ -8,10 +8,16 @@ api = Api(app)
 parser = reqparse.RequestParser()                                       # JSON parser
 parser.add_argument('file')
 
+# ip = request.environ['REMOTE_ADDR']
+# port = request.environ['REMOTE_PORT']
+# print(ip, " ", port)
 
 class simple_server(Resource):
 
     def get(self):
+        ip = request.environ['REMOTE_ADDR']
+        port = request.environ['REMOTE_PORT']
+        print("ON GET: ", ip, " ", port)
 
         parser = reqparse.RequestParser()
         parser.add_argument("data")                              # name of key
@@ -21,17 +27,19 @@ class simple_server(Resource):
 
         data = "This is a GET response."
         return make_response(data.encode(), 200)
-        # return "This is a GET response."
 
     def post(self):
-        # bb = json.loads(request.data.decode("utf-8"))           # POST data from DN
+
+        ip = request.environ['REMOTE_ADDR']
+        port = request.environ['REMOTE_PORT']
+        print("ON POST: ", ip, " ", port)
+
         data = "Hello from the server"
         print("\nReceived SimpleCli's POST.", request.data.decode("utf-8"))
         return make_response(data.encode(), 200)
-        # return "200 OK"
 
 
 api.add_resource(simple_server, "/")
 
 if __name__ == "__main__":
-    app.run(port='4000')
+    app.run(port='5000')
