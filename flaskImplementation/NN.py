@@ -26,14 +26,17 @@ block_size = 64000000                                                   # TODO: 
 replication_factor = 2
 err_code = 400
 err_message = "ERROR"
+fault_tolerance = "/FT"                                                 # listen for POSTs from NN
+
 
 # Lock to control access to data
-DN_List_Lock = threading.Lock()
-BB_Lock = threading.Lock()
+DataLock = threading.Lock()
+# DN_List_Lock = threading.Lock()
+# BB_Lock = threading.Lock()
 # Thread handler
 yourThread = threading.Thread()
 # Time between blockbeats
-wait_time = 30
+wait_time = 15
 
 
 class NN_server(Resource):
@@ -127,11 +130,11 @@ class BlockBeats(Resource):
         master_heartbeat_dict.update({sender_addr: datetime.datetime.now()})
 
         # display who send the block report and what the block report contains
-        print("Block report from:", sender_addr)
-        print(block_list, "\n")
-        print("My BB list: ")
-        for key in master_heartbeat_dict.keys():
-            print(key, " --> ", master_heartbeat_dict[key])
+        # print("Block report from:", sender_addr)
+        # print(block_list, "\n")
+        # print("My BB list: ")
+        # for key in master_heartbeat_dict.keys():
+        #     print(key, " --> ", master_heartbeat_dict[key])
 
         # update master DN list
         for dn_b in block_list:
@@ -165,39 +168,97 @@ def check_bb_table():
     global yourThread
 
     # Send block report to NN
-    with BB_Lock:
+    with DataLock:
 
+        failed_DN_list = []
+
+        # find nodes that have failed
         for DN_addr in master_heartbeat_dict.keys():
             elapsed = datetime.datetime.now() - master_heartbeat_dict[DN_addr]
-            print("current time  ", datetime.datetime.now())
-            print("DN's BB time  ", master_heartbeat_dict[DN_addr])
             print(DN_addr, "elapsed  ", elapsed)
             if elapsed > datetime.timedelta(seconds=wait_time):
                 print("DN FAILURE: ", DN_addr, " has failed! No block report for ", elapsed, ".")
-                update_masterDN_maintain_replication(DN_addr)   # Call the HELPER
+                failed_DN_list.append(DN_addr)
+
+        # remove failed DNs from BB list
+        for DN in failed_DN_list:
+            del master_heartbeat_dict[DN]
+
+        # update master DN list
+        seperator = " "
+        for DN_addr in failed_DN_list:
+            for f in master_DNlists_dict:                                       # check every file
+                for b in master_DNlists_dict[f]:                                # check every block of a file
+                    ip_list = master_DNlists_dict[f][b].split()
+                    # print("before: ", ip_list)
+
+                    if DN_addr in ip_list:                                      # check if blockid string is in ip str
+                        ip_list.remove(DN_addr)                                 # remove the addr from the ip str
+                        print("LIST AFTER REMOVE FAILED DN: ", ip_list)
+                        new_ip_str = seperator.join(ip_list)
+                        master_DNlists_dict[f][b] = new_ip_str
+                        print("AFTER MASTER DN LIST: ")
+                        print(master_DNlists_dict)
+                        # TODO - add parts for maintain replication factor
+
+                        available_DNs_list = list(set(master_heartbeat_dict.keys()) - set(ip_list))
+                        # if len(available_DNs_list) == 0:
+                        #     print("ERROR: Not enough DNs in the system! Quitting.")
+                        #     return "ERROR"
+
+                        sender_DN = ip_list[0]                                  # hard coded to get first DN  ??
+                        recv_DN = available_DNs_list[0]                         # hard coded to get first DN  ??
+                        blockid = b
+                        print("\n -- sender DN: ", sender_DN, " -- recv DN: ", recv_DN, " -- block: ", blockid, "\n")
+                        sender_DN_endpoint_addr = sender_DN + fault_tolerance
+                        data = json.dumps({blockid: recv_DN})
+                        response = requests.post(sender_DN_endpoint_addr, json=data)
+
 
     yourThread = threading.Timer(wait_time, check_bb_table)
     yourThread.start()
 
 
 # HELPER: from the given address from the master DN list
-def update_masterDN_maintain_replication(DN_addr):
-
-    seperator = " "
-
-    with DN_List_Lock and BB_Lock:
-
-        for f in master_DNlists_dict:                               # check every file
-            print("\nFILE: ", f)
-            for b in master_DNlists_dict[f]:                        # check every block of a file
-                ip_list = master_DNlists_dict[f][b].split()
-                print("before: ", ip_list)
-                if DN_addr in ip_list:                              # check if blockid string is in ip string
-                    ip_list.remove(DN_addr)                         # remove the addr from the ip str
-                    print("REMOVE FAILED DN: ", ip_list)
-                    new_ip_str = seperator.join(ip_list)
-                    master_DNlists_dict[f][b] = new_ip_str
-                    # TODO - add parts for maintain replication factor
+# def update_masterDN_maintain_replication(DN_addr):
+    # print("GETS INTO UPDATE MASTER DN with DN_addr ", DN_addr)
+    # print("BEFORE MASTER DN LIST: ")
+    # print(master_DNlists_dict)
+    #
+    #
+    # seperator = " "
+    #
+    # # with DN_List_Lock:
+    # #     with BB_Lock:
+    # with DataLock:
+    #
+    #     for f in master_DNlists_dict:                               # check every file
+    #         for b in master_DNlists_dict[f]:                        # check every block of a file
+    #             ip_list = master_DNlists_dict[f][b].split()
+    #             print("before: ", ip_list)
+    #             if DN_addr in ip_list:                              # check if blockid string is in ip string
+    #                 ip_list.remove(DN_addr)                         # remove the addr from the ip str
+    #                 print("LIST AFTER REMOVE FAILED DN: ", ip_list)
+    #                 new_ip_str = seperator.join(ip_list)
+    #                 master_DNlists_dict[f][b] = new_ip_str
+    #                 print("AFTER MASTER DN LIST: ")
+    #                 print(master_DNlists_dict)
+    #                 # TODO - add parts for maintain replication factor
+    #
+    #                 available_DNs_list = list(set(master_heartbeat_dict.keys()) - set(ip_list))
+    #                 if len(available_DNs_list) == 0:
+    #                     print("ERROR: Not enough DNs in the system! Quitting.")
+    #                     return "ERROR"
+    #
+    #                 sender_DN = ip_list[0]                          # hard coded to get first DN  ??
+    #                 recv_DN = available_DNs_list[0]                 # hard coded to get first DN  ??
+    #                 blockid = b
+    #                 print("\nsender DN: ", sender_DN)
+    #                 print("recv DN:   ", recv_DN)
+    #                 print("block:     ", blockid, "\n")
+    #                 sender_DN_endpoint_addr = sender_DN + fault_tolerance
+    #                 data = json.dumps({blockid: recv_DN})
+    #                 response = requests.post(sender_DN_endpoint_addr, json=data)
 
 
 # Initialize blockBeat thread

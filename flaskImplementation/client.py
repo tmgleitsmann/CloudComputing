@@ -107,6 +107,7 @@ def write_file():
             print("\nSending block: ", b)
             block_for_DN = {b: base64.b64encode(file_in_blocks[i])}         # get next chunk of file
             print("block_for_DN type: ", type(block_for_DN))
+            # print(block_for_DN)
             i = i + 1
             dn_dest_list = my_DN_dict[f][b].strip(" ").split(" ")           # convert DN str to DN list
 

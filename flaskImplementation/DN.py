@@ -18,15 +18,41 @@ port = "6000"
 blockbeat = "/BB"
 err_code = 400
 err_message = "ERROR"
+fault_tolerance = "/FT"                                                 # listen for POSTs from NN
+
 
 # Lock to control access to data
 dataLock = threading.Lock()
 # Thread handler
 yourThread = threading.Thread()
 # Time between blockbeats
-wait_time = 10
+wait_time = 5
 
 my_blocks = {}
+
+
+class data_from_NN(Resource):
+    def post(self):
+
+        with dataLock:
+            data = json.loads(json.loads(request.data.decode("utf-8")))
+            for key, value in data.items():
+                blockid = key
+                addr = value
+
+            block_data = my_blocks[blockid]
+            data_for_DN = {blockid: block_data}
+
+            # print("POST from NN: ", data)
+            print("blockid:      ", blockid)
+            print("addr:         ", addr)
+            print("sending data of type ", type(data_for_DN))
+
+            response = requests.post(addr, json=data_for_DN)  # send data to addr
+
+            if response.status_code != 200:
+                print("POST ERROR: ", response.status_code)
+
 
 class DN_server(Resource):
 
@@ -94,6 +120,8 @@ blockBeat()
 atexit.register(interrupt)
 
 api.add_resource(DN_server, "/")
+api.add_resource(data_from_NN, fault_tolerance)
+
 
 if __name__ == "__main__":
     app.run(port = port)
