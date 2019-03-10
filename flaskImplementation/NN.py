@@ -28,15 +28,10 @@ err_code = 400
 err_message = "ERROR"
 fault_tolerance = "/FT"                                                 # listen for POSTs from NN
 
-
-# Lock to control access to data
-DataLock = threading.Lock()
-# DN_List_Lock = threading.Lock()
-# BB_Lock = threading.Lock()
-# Thread handler
-yourThread = threading.Thread()
-# Time between blockbeats
-wait_time = 15
+# Threading variables
+DataLock = threading.Lock()                                             # Lock to control access to data
+yourThread = threading.Thread()                                         # Thread handler
+wait_time = 15                                                          # Time between block beats
 
 
 class NN_server(Resource):
@@ -85,15 +80,15 @@ class NN_server(Resource):
             block_index += 1
 
         # 2: assign a list of DN to each block (round robin) + create an empty DN list to store locally
-        block_json = {}                                     # "inside" json for block data (block id and list of DNs)
-        block_json_emptylist = {}                           # empty DN list for NN to store
-        rr_index = 0                                        # round robin index
-        empty_str = ""                                      # for block_json_emptyList
+        block_json = {}                                         # "inside" json for block data
+        block_json_emptylist = {}                               # empty DN list for NN to store
+        rr_index = 0                                            # round robin index
+        empty_str = ""                                          # for block_json_emptyList
 
-        for block in blockid_list:                          # make a DN list for each blockid in file
+        for block in blockid_list:                              # make a DN list for each blockid in file
             dn_str = ""
-            for i in range(0, replication_factor):          # assign N number of DNs per blockid, where N = rep. factor
-                ip = DN_IP[(rr_index + i) % len(DN_IP)]     # round robin assignment
+            for i in range(0, replication_factor):              # assign N # of DNs per blockid
+                ip = DN_IP[(rr_index + i) % len(DN_IP)]         # round robin assignment
                 dn_str = dn_str + ip + " "
                 # dn_list.append(ip)
 
@@ -109,7 +104,7 @@ class NN_server(Resource):
 
         print("\nSending DN list to client...")
         return make_response(json.dumps(DN_list_json_cli), 200)
-        # return json.dumps(DN_list_json_cli)                     # send the client version
+        # return json.dumps(DN_list_json_cli)                    # send the client version
 
 
 class BlockBeats(Resource):
@@ -129,13 +124,6 @@ class BlockBeats(Resource):
         # update master heart beat list with DN's IP and current time stamp
         master_heartbeat_dict.update({sender_addr: datetime.datetime.now()})
 
-        # display who send the block report and what the block report contains
-        # print("Block report from:", sender_addr)
-        # print(block_list, "\n")
-        # print("My BB list: ")
-        # for key in master_heartbeat_dict.keys():
-        #     print(key, " --> ", master_heartbeat_dict[key])
-
         # update master DN list
         for dn_b in block_list:
             for f in master_DNlists_dict:
@@ -146,13 +134,16 @@ class BlockBeats(Resource):
 
         print("MASTER LIST")
         for f in master_DNlists_dict:
-            print("file: ", f)
+            print("File: ", f)
             for b in master_DNlists_dict[f]:
-                print("\tblock: ", b, " --> ", master_DNlists_dict[f][b])
+                print("\tBlock: ", b, " --> ", master_DNlists_dict[f][b])
         print()
 
 
+# -----------------------------------------------------
 # THREAD - CHECKS BB LIST AND MAINTAINS FAULT TOLERANCE
+# -----------------------------------------------------
+
 
 def interrupt():
     global yourThread
@@ -163,7 +154,7 @@ def interrupt():
 # Checks block beat table to see if a blockid has not sent a block report in 30 seconds
 def check_bb_table():
 
-    print("IN OTHER THREAD")
+    print("BLOCK BEAT THREAD:")
     # Do initialisation stuff here
     global yourThread
 
@@ -175,10 +166,11 @@ def check_bb_table():
         # find nodes that have failed
         for DN_addr in master_heartbeat_dict.keys():
             elapsed = datetime.datetime.now() - master_heartbeat_dict[DN_addr]
-            print(DN_addr, "elapsed  ", elapsed)
+            print(DN_addr, " time elapsed -- ", elapsed)
             if elapsed > datetime.timedelta(seconds=wait_time):
-                print("DN FAILURE: ", DN_addr, " has failed! No block report for ", elapsed, ".")
+                print(" --> DN FAILURE: ", DN_addr, " has failed! No block report for time: ", elapsed)
                 failed_DN_list.append(DN_addr)
+        print()
 
         # remove failed DNs from BB list
         for DN in failed_DN_list:
@@ -194,22 +186,28 @@ def check_bb_table():
 
                     if DN_addr in ip_list:                                      # check if blockid string is in ip str
                         ip_list.remove(DN_addr)                                 # remove the addr from the ip str
-                        print("LIST AFTER REMOVE FAILED DN: ", ip_list)
+                        # print("LIST AFTER REMOVE FAILED DN: ", ip_list)
                         new_ip_str = seperator.join(ip_list)
                         master_DNlists_dict[f][b] = new_ip_str
-                        print("AFTER MASTER DN LIST: ")
-                        print(master_DNlists_dict)
-                        # TODO - add parts for maintain replication factor
+                        print("Master List after Failed DN removal: ")
+                        for f in master_DNlists_dict:
+                            print("File: ", f)
+                            for b in master_DNlists_dict[f]:
+                                print("\tBlock: ", b, " --> ", master_DNlists_dict[f][b])
+                        print()
+
 
                         available_DNs_list = list(set(master_heartbeat_dict.keys()) - set(ip_list))
-                        # if len(available_DNs_list) == 0:
-                        #     print("ERROR: Not enough DNs in the system! Quitting.")
-                        #     return "ERROR"
+                        if len(available_DNs_list) == 0:
+                            print("ERROR: Not enough DNs in the system! Quitting.")
+                            return "ERROR"
 
                         sender_DN = ip_list[0]                                  # hard coded to get first DN  ??
                         recv_DN = available_DNs_list[0]                         # hard coded to get first DN  ??
                         blockid = b
-                        print("\n -- sender DN: ", sender_DN, " -- recv DN: ", recv_DN, " -- block: ", blockid, "\n")
+                        print("Maintaining Replication factor -- sender DN: ", sender_DN, end="")
+                        print(" -- recv DN: ", recv_DN, end="")
+                        print(" -- block: ", blockid, "\n")
                         sender_DN_endpoint_addr = sender_DN + fault_tolerance
                         data = json.dumps({blockid: recv_DN})
                         response = requests.post(sender_DN_endpoint_addr, json=data)
@@ -219,52 +217,8 @@ def check_bb_table():
     yourThread.start()
 
 
-# HELPER: from the given address from the master DN list
-# def update_masterDN_maintain_replication(DN_addr):
-    # print("GETS INTO UPDATE MASTER DN with DN_addr ", DN_addr)
-    # print("BEFORE MASTER DN LIST: ")
-    # print(master_DNlists_dict)
-    #
-    #
-    # seperator = " "
-    #
-    # # with DN_List_Lock:
-    # #     with BB_Lock:
-    # with DataLock:
-    #
-    #     for f in master_DNlists_dict:                               # check every file
-    #         for b in master_DNlists_dict[f]:                        # check every block of a file
-    #             ip_list = master_DNlists_dict[f][b].split()
-    #             print("before: ", ip_list)
-    #             if DN_addr in ip_list:                              # check if blockid string is in ip string
-    #                 ip_list.remove(DN_addr)                         # remove the addr from the ip str
-    #                 print("LIST AFTER REMOVE FAILED DN: ", ip_list)
-    #                 new_ip_str = seperator.join(ip_list)
-    #                 master_DNlists_dict[f][b] = new_ip_str
-    #                 print("AFTER MASTER DN LIST: ")
-    #                 print(master_DNlists_dict)
-    #                 # TODO - add parts for maintain replication factor
-    #
-    #                 available_DNs_list = list(set(master_heartbeat_dict.keys()) - set(ip_list))
-    #                 if len(available_DNs_list) == 0:
-    #                     print("ERROR: Not enough DNs in the system! Quitting.")
-    #                     return "ERROR"
-    #
-    #                 sender_DN = ip_list[0]                          # hard coded to get first DN  ??
-    #                 recv_DN = available_DNs_list[0]                 # hard coded to get first DN  ??
-    #                 blockid = b
-    #                 print("\nsender DN: ", sender_DN)
-    #                 print("recv DN:   ", recv_DN)
-    #                 print("block:     ", blockid, "\n")
-    #                 sender_DN_endpoint_addr = sender_DN + fault_tolerance
-    #                 data = json.dumps({blockid: recv_DN})
-    #                 response = requests.post(sender_DN_endpoint_addr, json=data)
-
-
-# Initialize blockBeat thread
-check_bb_table()
-# When you kill Flask (SIGTERM), clear the trigger for the next thread
-atexit.register(interrupt)
+check_bb_table()                                # Initialize blockBeat thread
+atexit.register(interrupt)                      # When you kill Flask (SIGTERM), clear the trigger for the next thread
 
 
 api.add_resource(NN_server, "/")

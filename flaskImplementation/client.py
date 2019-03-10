@@ -73,7 +73,6 @@ def write_file():
 
     except ClientError as ex:
         print("ERROR: the s3 file path you entered is not valid.")          # return if given invalid s3 file path
-        print(ex)
         return
 
     # Save save file name and file size into json object
@@ -106,7 +105,7 @@ def write_file():
         for b in my_DN_dict[f]:
             print("\nSending block: ", b)
             block_for_DN = {b: base64.b64encode(file_in_blocks[i])}         # get next chunk of file
-            print("block_for_DN type: ", type(block_for_DN))
+            # print("block_for_DN type: ", type(block_for_DN))
             # print(block_for_DN)
             i = i + 1
             dn_dest_list = my_DN_dict[f][b].strip(" ").split(" ")           # convert DN str to DN list
@@ -175,9 +174,7 @@ def read_file():
         while i < len(ip_list):
             dn = ip_list[i]
             payload = {"blockid": block}                                    # id of block that client is requesting
-            # payload = "bogusid"
             response = GET(payload, dn)                                     # GET block from DN or err if does not exist
-            print("response type: ", type(response))
             response = base64.b64decode(json.loads(response))
 
             # if you've looped through all dn and you still don't have the data... error!
@@ -197,7 +194,7 @@ def read_file():
                 i = i + 1
 
     read_file.close()
-    print("\n\nead of file", file, "complete.")
+    print("\n\nRead of file", file, "complete!")
     print("Total bytes from READ: ", total_bytes, "\n")
 
 
@@ -276,8 +273,6 @@ Parameters:
 - addr: address to send request to
 """
 def POST(data, addr):
-    print("before posting ")
-    print("sending...")
     response = requests.post(addr, json=data)                               # send data to addr
 
     if response.status_code != 200:

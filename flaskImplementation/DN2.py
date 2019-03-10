@@ -11,6 +11,7 @@ api = Api(app)
 parser = reqparse.RequestParser()
 parser.add_argument('file')
 
+# Global variables
 NN_addr = "http://127.0.0.1:5000"
 my_addr = "http://127.0.0.1:6001"
 localhost = "http://127.0.0.1"    #THIS NEEDS TO CHANGE TO NAME NODE IP
@@ -21,14 +22,13 @@ err_message = "ERROR"
 fault_tolerance = "/FT"                                                 # listen for POSTs from NN
 
 
-# Lock to control access to data
-dataLock = threading.Lock()
-# Thread handler
-yourThread = threading.Thread()
-# Time between blockbeats
-wait_time = 5
-
+# My data
 my_blocks = {}
+
+# Threading variables
+dataLock = threading.Lock()                                             # Lock to control access to data
+yourThread = threading.Thread()                                         # Thread handler
+wait_time = 5
 
 class data_from_NN(Resource):
     def post(self):
@@ -62,7 +62,7 @@ class DN_server(Resource):
         args = parser.parse_args()
         blockid = args["blockid"]                                   # Payload from client containing block id
 
-        print("\nClient requested block: ", blockid, " - checking if I have it...", end="")
+        print("\nClient requested block: ", blockid, " - checking if I have it... ", end="")
 
         with dataLock:
             # If I have the block id, send the data back
@@ -79,25 +79,15 @@ class DN_server(Resource):
     def post(self):
 
         with dataLock:
-            # Write
             a = json.loads(request.data)
             my_blocks.update(a)                                         # Add {"blockid":"data"} to my_blocks dict
 
             # Test print
-            print(my_blocks)
-            print("I have blocks: ", end="")
+            print("My blocks: ")
             for blockid in my_blocks.keys():
-                print(blockid, "  ", end="")
+                print(blockid)
             print()
 
-        # # Send block report
-        # response = requests.post(NN_BB_addr, json=block_report)     # Send my blocks as a list to NN
-        #
-        # if response.status_code != 200:
-        #     print("ERROR: Error in sending block report to NN")
-        # else:
-        #     print("SUCCESS: Sent block report to NN\n")
-        # return request.data.decode("utf-8")
 
 def interrupt():
     global yourThread
