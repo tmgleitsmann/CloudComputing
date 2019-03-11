@@ -60,7 +60,7 @@ class DN_server(Resource):
         args = parser.parse_args()
         blockid = args["blockid"]                                   # Payload from client containing block id
 
-        print("\nClient requested block: ", blockid, " - checking if I have it... ")#, end="")
+        print("\nClient requested block: ", blockid, " - checking if I have it... ", end="")
 
         with dataLock:
             # If I have the block id, send the data back

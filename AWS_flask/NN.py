@@ -19,7 +19,7 @@ master_DNlists_dict = {}                                                # master
 master_heartbeat_dict = {}                                              # master list for block reports / heart beats
 
 # NN Setup
-block_size = 64000000                                                   # TODO: change from B to MB
+block_size = 64000000                                                   # 64 Megabyte block size
 replication_factor = 2
 err_code = 400
 port = 5000
@@ -41,7 +41,7 @@ class NN_server(Resource):
         args = parser.parse_args()
         filename = args["filename"]                                     # payload from client containing block id
 
-        print("\nClient requested file: ", filename, " - checking if I have it...")#, end="")
+        print("\nClient requested file: ", filename, " - checking if I have it...", end="")
 
         # if I have the file, send the DN list back
         if filename in master_DNlists_dict.keys():
@@ -201,8 +201,8 @@ def check_bb_table():
                         sender_DN = ip_list[0]                                  # hard coded to get first DN  ??
                         recv_DN = available_DNs_list[0]                         # hard coded to get first DN  ??
                         blockid = b
-                        print("Maintaining Replication factor -- sender DN: ", sender_DN)#, end="")
-                        print(" -- recv DN: ", recv_DN)#, end="")
+                        print("Maintaining Replication factor -- sender DN: ", sender_DN, end="")
+                        print(" -- recv DN: ", recv_DN, end="")
                         print(" -- block: ", blockid, "\n")
                         sender_DN_endpoint_addr = sender_DN + fault_tolerance
                         data = json.dumps({blockid: recv_DN})

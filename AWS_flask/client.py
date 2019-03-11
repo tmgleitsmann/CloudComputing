@@ -31,10 +31,10 @@ def action_list():
     4: Exit program\n"""
     print(options)
 
-    selection = raw_input("Please choose an action 1-4: ")
+    selection = input("Please choose an action 1-4: ")
 
     while selection not in ('1', '2', '3', '4'):
-        selection = raw_input("Please choose an action 1-4: ")
+        selection = input("Please choose an action 1-4: ")
 
     return selection
 
@@ -53,7 +53,7 @@ def write_file():
     print("------\n")
 
     # get S3 object path from user
-    filename = raw_input("Enter an S3 object path: ")                           # s3 bucket name: dundermifflin-sufs
+    filename = input("Enter an S3 object path: ")                           # s3 bucket name: dundermifflin-sufs
 
     # UNCOMMETED FOR NOW FOR SO WE DON'T HAVE TO TYPE OUT WHOLE PATH
     # path_list = filename.split("/", 1)                                    # check that a bucket and file were given
@@ -206,7 +206,7 @@ Return DN list as dict "ERROR".
 """
 def get_DN_list():
 
-    file = raw_input("Enter the filename: ")                                # enter name of file to get DN list for
+    file = input("Enter the filename: ")                                # enter name of file to get DN list for
     data_json = {"filename": file}                                      # create the json object to POST
     response = GET(data_json, NN_addr)
 
@@ -240,7 +240,7 @@ def print_DN_list():
 
         # for each block in the file, print the DNs that holds this file
         for block in dn_list:
-            print(block, " --> ")#, end="")
+            print(block, " --> ", end="")
             print(dn_list[block])
         print()
 
