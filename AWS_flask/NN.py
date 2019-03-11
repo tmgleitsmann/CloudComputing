@@ -3,7 +3,6 @@ from flask_restful import Api, Resource, reqparse, request
 import requests
 import simplejson as json
 import datetime
-import time
 import threading
 import atexit
 
@@ -88,9 +87,7 @@ class NN_server(Resource):
             for i in range(0, replication_factor):              # assign N # of DNs per blockid
                 dn_ip_list = list(master_heartbeat_dict.keys())
                 ip = dn_ip_list[(rr_index + i) % len(dn_ip_list)] # round robin assignment
-                # ip = DN_IP[(rr_index + i) % len(DN_IP)]         # round robin assignment
                 dn_str = dn_str + ip + " "
-                # dn_list.append(ip)
 
             rr_index = (rr_index + 1) % len(dn_ip_list)         # increment the rr_index or wraps back around
             block_json.update({block: dn_str})                  # update block_json for client
@@ -186,10 +183,10 @@ def check_bb_table():
                         new_ip_str = seperator.join(ip_list)
                         master_DNlists_dict[f][b] = new_ip_str
                         print("Master List after Failed DN removal: ")
-                        for f in master_DNlists_dict:
-                            print("File: ", f)
-                            for b in master_DNlists_dict[f]:
-                                print("\tBlock: ", b, " --> ", master_DNlists_dict[f][b])
+                        for f1 in master_DNlists_dict:
+                            print("File: ", f1)
+                            for b1 in master_DNlists_dict[f1]:
+                                print("\tBlock: ", b1, " --> ", master_DNlists_dict[f1][b1])
                         print()
 
 
@@ -200,12 +197,11 @@ def check_bb_table():
 
                         sender_DN = ip_list[0]                                  # hard coded to get first DN  ??
                         recv_DN = available_DNs_list[0]                         # hard coded to get first DN  ??
-                        blockid = b
                         print("Maintaining Replication factor -- sender DN: ", sender_DN, end="")
                         print(" -- recv DN: ", recv_DN, end="")
-                        print(" -- block: ", blockid, "\n")
+                        print(" -- block: ", b, "\n")
                         sender_DN_endpoint_addr = sender_DN + fault_tolerance
-                        data = json.dumps({blockid: recv_DN})
+                        data = json.dumps({b: recv_DN})
                         response = requests.post(sender_DN_endpoint_addr, json=data)
 
 

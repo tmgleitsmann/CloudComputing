@@ -240,8 +240,7 @@ def print_DN_list():
 
         # for each block in the file, print the DNs that holds this file
         for block in dn_list:
-            print(block, " --> ", end="")
-            print(dn_list[block])
+            print(block, " --> ", dn_list[block])
         print()
 
 
