@@ -22,7 +22,8 @@ err_message = "ERROR"
 fault_tolerance = "/FT"                                                 # listen for POSTs from NN
 
 # My data
-my_blocks = {}
+# my_blocks = {}
+my_blocks = []
 
 # Threading variables
 dataLock = threading.Lock()                                             # Lock to control access to data
@@ -34,13 +35,18 @@ class data_from_NN(Resource):
     def post(self):
 
         with dataLock:
+
+            blockid = ""
+            addr = ""
             data = json.loads(json.loads(request.data.decode("utf-8")))
             for key, value in data.items():
                 blockid = key
                 addr = value
 
-            block_data = my_blocks[blockid]
-            data_for_DN = {blockid: block_data}
+            with open(blockid, 'r') as myfile:
+                data = myfile.read()
+            # block_data = my_blocks[blockid]
+            data_for_DN = {blockid: data}
 
             # print("POST from NN: ", data)
             print("blockid:      ", blockid)
@@ -65,28 +71,66 @@ class DN_server(Resource):
         print("\nClient requested block: ", blockid, " - checking if I have it... ", end="")
 
         with dataLock:
+
             # If I have the block id, send the data back
-            if blockid in my_blocks.keys():
+            if blockid in my_blocks:
                 print("I HAVE block:", blockid, "\n")
-                value = my_blocks[blockid]
-                return value
+
+                with open(blockid, 'r') as myfile:
+                    data = myfile.read()
+                return make_response(data, 200)
+                # value = my_blocks[blockid]
+                # return value
 
             # Else, return ERROR
             else:
                 print("I do NOT have block:", blockid, "\n")
                 return err_message
 
+            # # If I have the block id, send the data back
+            # if blockid in my_blocks.keys():
+            #     print("I HAVE block:", blockid, "\n")
+            #     value = my_blocks[blockid]
+            #     return value
+            #
+            # # Else, return ERROR
+            # else:
+            #     print("I do NOT have block:", blockid, "\n")
+            #     return err_message
+
     def post(self):
 
         with dataLock:
-            a = json.loads(request.data)
-            my_blocks.update(a)                                         # Add {"blockid":"data"} to my_blocks dict
+
+            # get the block id and use as filename
+            block_data = json.loads(request.data)
+            print("TYPE ", type(block_data))
+            for blockid, data in block_data.items():
+                my_blocks.append(blockid)
+                file = open(blockid, "w")                # write block data into file
+                file.write(data)
+                file.close()
 
             # Test print
             print("My blocks: ")
-            for blockid in my_blocks.keys():
+            for blockid in my_blocks:
                 print(blockid)
+                print(type(blockid))
             print()
+
+            # print("My blocks: ")
+            # for blockid in my_blocks:
+            #     print(blockid)
+
+            # a = json.loads(request.data)
+            # my_blocks.update(a)                                         # Add {"blockid":"data"} to my_blocks dict
+            #
+            # # Test print
+            # print("My blocks: ")
+            # for blockid in my_blocks.keys():
+            #     print(blockid)
+            #     print(type(blockid))
+            # print()
 
 
 def interrupt():
@@ -101,7 +145,7 @@ def blockBeat():
         NN_BB_addr = NN_addr + blockbeat # Address of NN + block beat end point --> "/BB"
         block_report = {
             "DN_addr": my_addr,
-            "block_report": list(my_blocks.keys())
+            "block_report": my_blocks
         }
     response = requests.post(NN_BB_addr, json=block_report)     # Send my blocks as a list to NN
 

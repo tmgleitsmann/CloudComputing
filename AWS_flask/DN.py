@@ -49,7 +49,7 @@ class data_from_NN(Resource):
             print("addr:         ", addr)
             print("sending data of type ", type(data_for_DN))
 
-            response = requests.post(addr, json=data_for_DN)  # send data to addr
+            response = requests.post(addr, json=data_for_DN)            # send data to addr
 
             if response.status_code != 200:
                 print("POST ERROR: ", response.status_code)
@@ -60,9 +60,9 @@ class DN_server(Resource):
     def get(self):
         # Get block id sent from client (key = "blockid")
         parser = reqparse.RequestParser()
-        parser.add_argument("blockid")                              # Name of key
+        parser.add_argument("blockid")                                  # Name of key
         args = parser.parse_args()
-        blockid = args["blockid"]                                   # Payload from client containing block id
+        blockid = args["blockid"]                                       # Payload from client containing block id
 
         print("\nClient requested block: ", blockid, " - checking if I have it... ", end="")
 
@@ -84,18 +84,6 @@ class DN_server(Resource):
                 return err_message
 
 
-        # with dataLock:
-        #     # If I have the block id, send the data back
-        #     if blockid in my_blocks.keys():
-        #         print("I HAVE block:", blockid, "\n")
-        #         value = my_blocks[blockid]
-        #         return value
-        #
-        #     # Else, return ERROR
-        #     else:
-        #         print("I do NOT have block:", blockid, "\n")
-        #         return err_message
-
     def post(self):
 
         with dataLock:
@@ -105,7 +93,7 @@ class DN_server(Resource):
             print("TYPE ", type(block_data))
             for blockid, data in block_data.items():
                 my_blocks.append(blockid)
-                file = open(blockid, "w")                # write block data into file
+                file = open(blockid, "w")                               # write block data into file
                 file.write(data)
                 file.close()
 
@@ -113,18 +101,7 @@ class DN_server(Resource):
             print("My blocks: ")
             for blockid in my_blocks:
                 print(blockid)
-                print(type(blockid))
             print()
-
-        # with dataLock:
-        #     a = json.loads(request.data)
-        #     my_blocks.update(a)                                         # Add {"blockid":"data"} to my_blocks dict
-        #
-        #     # Test print
-        #     print("My blocks: ")
-        #     for blockid in my_blocks.keys():
-        #         print(blockid)
-        #     print()
 
 
 def interrupt():
@@ -137,7 +114,7 @@ def blockBeat():
 
     # Send block report to NN
     with dataLock:
-        NN_BB_addr = NN_addr + blockbeat # Address of NN + block beat end point --> "/BB"
+        NN_BB_addr = NN_addr + blockbeat                                # Address of NN + block beat end point --> "/BB"
         block_report = {"block_report": my_blocks}
     response = requests.post(NN_BB_addr, json=block_report)             # Send my blocks as a list to NN
 
@@ -150,9 +127,9 @@ def blockBeat():
     yourThread.start()
 
 
-blockBeat()                                     # Initialize blockBeat thread
-atexit.register(interrupt)                      # When you kill Flask (SIGTERM), clear the trigger for the next thread
-
+blockBeat()                                                             # Initialize blockBeat thread
+atexit.register(interrupt)                                              # When you kill Flask (SIGTERM),
+                                                                        # clear the trigger for the next thread
 
 api.add_resource(DN_server, "/")
 api.add_resource(data_from_NN, fault_tolerance)

@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, make_response
+from flask import Flask,  make_response
 from flask_restful import Api, Resource, reqparse, request
 import requests
 import simplejson as json
@@ -84,6 +84,7 @@ class NN_server(Resource):
 
         for block in blockid_list:                              # make a DN list for each blockid in file
             dn_str = ""
+            dn_ip_list = []
             for i in range(0, replication_factor):              # assign N # of DNs per blockid
                 dn_ip_list = list(master_heartbeat_dict.keys())
                 ip = dn_ip_list[(rr_index + i) % len(dn_ip_list)] # round robin assignment
@@ -97,7 +98,7 @@ class NN_server(Resource):
         DN_list_json = {filename: block_json_emptylist}
         master_DNlists_dict.update(DN_list_json)                # store the local version
 
-        DN_list_json_cli =  {filename: block_json}
+        DN_list_json_cli = {filename: block_json}
 
         print("\nSending DN list to client...")
         return make_response(json.dumps(DN_list_json_cli), 200)
@@ -175,11 +176,9 @@ def check_bb_table():
             for f in master_DNlists_dict:                                       # check every file
                 for b in master_DNlists_dict[f]:                                # check every block of a file
                     ip_list = master_DNlists_dict[f][b].split()
-                    # print("before: ", ip_list)
 
                     if DN_addr in ip_list:                                      # check if blockid string is in ip str
                         ip_list.remove(DN_addr)                                 # remove the addr from the ip str
-                        # print("LIST AFTER REMOVE FAILED DN: ", ip_list)
                         new_ip_str = seperator.join(ip_list)
                         master_DNlists_dict[f][b] = new_ip_str
                         print("Master List after Failed DN removal: ")

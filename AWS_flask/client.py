@@ -6,9 +6,9 @@ from botocore.exceptions import ClientError
 
 
 # Global variables
-NN_addr = "http://18.237.119.12:5000"                                        # TODO: insert NN IP ADDR HERE
-s3 = boto3.resource('s3')                                       # for accessing s3 on a write
-block_size = 64000000                                           # 64 MB
+NN_addr = "http://:5000"                                                    # TODO: insert NN IP ADDR HERE
+s3 = boto3.resource('s3')                                                   # for accessing s3 on a write
+block_size = 64000000                                                       # 64 MB
 replication_factor = 3
 err = "ERROR"
 
@@ -55,21 +55,22 @@ def write_file():
     # get S3 object path from user
     filename = input("Enter an S3 object path: ")                           # s3 bucket name: dundermifflin-sufs
 
-    # UNCOMMETED FOR NOW FOR SO WE DON'T HAVE TO TYPE OUT WHOLE PATH
-    # path_list = filename.split("/", 1)                                    # check that a bucket and file were given
-    # if len(path_list) < 2:
-    #     print("You must include the bucket and file.")
-    #     return
-    #
-    # bucket = path_list[0]
-    # filename = path_list[1]
-    # print("bucket ", bucket)
-    # print("path   ", filename)
-    bucket = 'dundermifflin-sufs'                                           # hard coded for now
+    path_list = filename.split("/", 1)                                      # check that a bucket and file were given
+    if len(path_list) < 2:
+        print("You must include the bucket and file.")
+        return
+
+    bucket = path_list[0]
+    filename = path_list[1]
+    print("bucket ", bucket)
+    print("path   ", filename)
+    # bucket = 'dundermifflin-sufs'                                         # hard coded for now
     s3obj = s3.Object(bucket, filename)                                     # var that represents an s3 object
 
     try:
+        print("in the try before read")
         image = s3obj.get()['Body'].read()
+        print("in try after the read")
 
     except ClientError as ex:
         print("ERROR: the s3 file path you entered is not valid.")          # return if given invalid s3 file path
@@ -105,8 +106,6 @@ def write_file():
         for b in my_DN_dict[f]:
             print("\nSending block: ", b)
             block_for_DN = {b: base64.b64encode(file_in_blocks[i])}         # get next chunk of file
-            # print("block_for_DN type: ", type(block_for_DN))
-            # print(block_for_DN)
             i = i + 1
             dn_dest_list = my_DN_dict[f][b].strip(" ").split(" ")           # convert DN str to DN list
 
