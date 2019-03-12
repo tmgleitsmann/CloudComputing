@@ -6,7 +6,7 @@ from botocore.exceptions import ClientError
 
 
 # Global variables
-NN_addr = "http://:5000"                                        # TODO: insert NN IP ADDR HERE
+NN_addr = "http://18.237.119.12:5000"                                        # TODO: insert NN IP ADDR HERE
 s3 = boto3.resource('s3')                                       # for accessing s3 on a write
 block_size = 64000000                                           # 64 MB
 replication_factor = 3
@@ -175,7 +175,9 @@ def read_file():
             dn = ip_list[i]
             payload = {"blockid": block}                                    # id of block that client is requesting
             response = GET(payload, dn)                                     # GET block from DN or err if does not exist
-            response = base64.b64decode(json.loads(response))
+            # response = base64.b64decode(json.loads(response))
+            response = base64.b64decode(response)
+
 
             # if you've looped through all dn and you still don't have the data... error!
             if response == err and i == (len(ip_list) - 1):
