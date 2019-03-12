@@ -19,7 +19,7 @@ master_heartbeat_dict = {}                                              # master
 
 # NN Setup
 block_size = 64000000                                                   # 64 Megabyte block size
-replication_factor = 2
+replication_factor = 3
 err_code = 400
 port = 5000
 err_message = "ERROR"
