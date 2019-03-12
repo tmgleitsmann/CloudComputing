@@ -28,7 +28,7 @@ fault_tolerance = "/FT"                                                 # listen
 # Threading variables
 DataLock = threading.Lock()                                             # Lock to control access to data
 yourThread = threading.Thread()                                         # Thread handler
-wait_time = 15                                                          # Time between block beats
+wait_time = 30                                                          # Time between block beats
 
 
 class NN_server(Resource):

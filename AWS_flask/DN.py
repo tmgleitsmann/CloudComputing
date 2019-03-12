@@ -25,7 +25,7 @@ my_blocks = []
 # Threading variables
 dataLock = threading.Lock()                                             # Lock to control access to data
 yourThread = threading.Thread()                                         # Thread handler
-wait_time = 5                                                           # Time between blockbeats
+wait_time = 10                                                          # Time between blockbeats
 
 
 class data_from_NN(Resource):
