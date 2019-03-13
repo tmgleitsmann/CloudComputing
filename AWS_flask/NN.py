@@ -148,7 +148,7 @@ def interrupt():
 # Checks block beat table to see if a blockid has not sent a block report in 30 seconds
 def check_bb_table():
 
-    print("\033[92m BLOCK BEAT THREAD:\033[0m")
+    print("\033[92mBLOCK BEAT THREAD:\033[0m")
     # Do initialisation stuff here
     global yourThread
 

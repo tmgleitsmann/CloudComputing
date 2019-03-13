@@ -90,7 +90,6 @@ class DN_server(Resource):
 
             # get the block id and use as filename
             block_data = json.loads(request.data)
-            print("TYPE ", type(block_data))
             for blockid, data in block_data.items():
                 my_blocks.append(blockid)
                 file = open(blockid, "w")                               # write block data into file
