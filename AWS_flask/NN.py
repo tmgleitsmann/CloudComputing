@@ -126,7 +126,7 @@ class BlockBeats(Resource):
                     if b == dn_b and sender_addr not in ip_list:
                         master_DNlists_dict[f][b] = master_DNlists_dict[f][b] + " " + sender_addr + " "
 
-        print("MASTER LIST")
+        print("\033[ 94mMASTER LIST\033[ 0m")
         for f in master_DNlists_dict:
             print("File: ", f)
             for b in master_DNlists_dict[f]:
@@ -148,7 +148,7 @@ def interrupt():
 # Checks block beat table to see if a blockid has not sent a block report in 30 seconds
 def check_bb_table():
 
-    print("BLOCK BEAT THREAD:")
+    print("\033[ 92mBLOCK BEAT THREAD:\033[ 0m")
     # Do initialisation stuff here
     global yourThread
 
@@ -162,7 +162,7 @@ def check_bb_table():
             elapsed = datetime.datetime.now() - master_heartbeat_dict[DN_addr]
             print(DN_addr, " time elapsed -- ", elapsed)
             if elapsed > datetime.timedelta(seconds=wait_time):
-                print(" --> DN FAILURE: ", DN_addr, " has failed! No block report for time: ", elapsed)
+                print("\033[ 91m --> DN FAILURE: ", DN_addr, " has failed! No block report for time: ", elapsed, "\033[ 0m")
                 failed_DN_list.append(DN_addr)
         print()
 

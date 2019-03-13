@@ -48,9 +48,9 @@ Uses DN list to send blocks of data to DNs.
 """
 def write_file():
 
-    print("\n------")
+    print("\n\033[ 91m------")
     print("WRITE")
-    print("------\n")
+    print("------\033[ 0m\n")
 
     # get S3 object path from user
     filename = input("Enter an S3 object path: ")                           # s3 bucket name: dundermifflin-sufs
@@ -156,9 +156,9 @@ def read_file():
         print("ERROR: Not a valid file for reading.")
         return
 
-    print("\n--------------------------------------------")
+    print("\n\033[ 94m--------------------------------------------")
     print("READ FILE: ", file)
-    print("--------------------------------------------")
+    print("--------------------------------------------\033[ 0m")
 
     total_bytes = 0                                                         # track how many bytes are read
 
@@ -235,9 +235,9 @@ def print_DN_list():
         print("\nERROR: This file does not exist.")
 
     else:
-        print("\n--------------------------------------------")
+        print("\n\033[ 92m--------------------------------------------")
         print("GET DN LIST FOR FILE: ", file)
-        print("--------------------------------------------")
+        print("--------------------------------------------\033[ m")
 
         # for each block in the file, print the DNs that holds this file
         for block in dn_list:
