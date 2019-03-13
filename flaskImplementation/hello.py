@@ -1,1 +1,2 @@
-print("\033[ 94m\nhello world!\n\033[ 0m")
+print("\n\033[94mhello world!\033[0m\n")
+

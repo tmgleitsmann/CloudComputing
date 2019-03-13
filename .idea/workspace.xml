@@ -17,8 +17,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/AWS_flask/DN.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="390">
-              <caret line="26" column="34" selection-start-line="26" selection-start-column="34" selection-end-line="26" selection-end-column="34" />
+            <state relative-caret-position="180">
+              <caret line="17" column="13" selection-start-line="17" selection-start-column="13" selection-end-line="17" selection-end-column="13" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
               </folding>
@@ -29,8 +29,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/AWS_flask/client.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="149">
-              <caret line="235" lean-forward="true" selection-start-line="235" selection-end-line="235" />
+            <state relative-caret-position="180">
+              <caret line="50" column="17" selection-start-line="50" selection-start-column="14" selection-end-line="50" selection-end-column="17" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
@@ -41,8 +41,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/AWS_flask/NN.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="438">
-              <caret line="153" lean-forward="true" selection-start-line="153" selection-end-line="153" />
+            <state relative-caret-position="165">
+              <caret line="149" lean-forward="true" selection-start-line="149" selection-end-line="149" />
             </state>
           </provider>
         </entry>
@@ -50,8 +50,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/flaskImplementation/hello.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state>
-              <caret column="17" lean-forward="true" selection-start-column="17" selection-end-column="17" />
+            <state relative-caret-position="30">
+              <caret line="2" lean-forward="true" selection-start-line="2" selection-end-line="2" />
             </state>
           </provider>
         </entry>
@@ -65,6 +65,9 @@
       <find>BB</find>
       <find>POST</find>
       <find>\033[ m</find>
+      <find>Block beat</find>
+      <find>[</find>
+      <find>033</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -77,15 +80,15 @@
         <option value="$USER_HOME$/PycharmProjects/flaskSUFS/venv/test.py" />
         <option value="$PROJECT_DIR$/AWS_flask/DN.py" />
         <option value="$PROJECT_DIR$/flaskImplementation/hello.py" />
-        <option value="$PROJECT_DIR$/AWS_flask/NN.py" />
         <option value="$PROJECT_DIR$/AWS_flask/client.py" />
+        <option value="$PROJECT_DIR$/AWS_flask/NN.py" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="1">
-    <option name="x" value="310" />
+  <component name="ProjectFrameBounds">
+    <option name="x" value="155" />
     <option name="y" value="22" />
-    <option name="width" value="1130" />
+    <option name="width" value="1285" />
     <option name="height" value="862" />
   </component>
   <component name="ProjectView">
@@ -146,10 +149,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="310" y="22" width="1130" height="862" extended-state="0" />
+    <frame x="155" y="22" width="1285" height="862" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" weight="0.18437783" />
+      <window_info content_ui="combo" id="Project" order="0" weight="0.16060127" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -160,7 +163,7 @@
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Version Control" order="7" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="8" visible="true" weight="0.08831169" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="8" visible="true" weight="0.19870129" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
       <window_info anchor="bottom" id="Python Console" order="10" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
@@ -249,27 +252,27 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/AWS_flask/gb.txt" />
-    <entry file="file://$PROJECT_DIR$/flaskImplementation/hello.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret column="17" lean-forward="true" selection-start-column="17" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/AWS_flask/DN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="390">
-          <caret line="26" column="34" selection-start-line="26" selection-start-column="34" selection-end-line="26" selection-end-column="34" />
+        <state relative-caret-position="180">
+          <caret line="17" column="13" selection-start-line="17" selection-start-column="13" selection-end-line="17" selection-end-column="13" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/flaskImplementation/hello.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30">
+          <caret line="2" lean-forward="true" selection-start-line="2" selection-end-line="2" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/AWS_flask/client.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="149">
-          <caret line="235" lean-forward="true" selection-start-line="235" selection-end-line="235" />
+        <state relative-caret-position="180">
+          <caret line="50" column="17" selection-start-line="50" selection-start-column="14" selection-end-line="50" selection-end-column="17" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
           </folding>
@@ -278,8 +281,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/AWS_flask/NN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="438">
-          <caret line="153" lean-forward="true" selection-start-line="153" selection-end-line="153" />
+        <state relative-caret-position="165">
+          <caret line="149" lean-forward="true" selection-start-line="149" selection-end-line="149" />
         </state>
       </provider>
     </entry>
