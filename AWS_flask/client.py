@@ -6,7 +6,7 @@ from botocore.exceptions import ClientError
 
 
 # Global variables
-NN_addr = "http://:5000"                                                    # TODO: insert NN IP ADDR HERE
+NN_addr = "http://18.237.165.71:5000"                                                    # TODO: insert NN IP ADDR HERE
 s3 = boto3.resource('s3')                                                   # for accessing s3 on a write
 block_size = 64000000                                                       # 64 MB
 replication_factor = 3
@@ -114,7 +114,7 @@ def write_file():
 
                 print(dn, " ---> ", b)                                      # dn represents the ip:port of DN
                 data = block_for_DN
-                POST(data, dn)                                              # TODO: change this to DN_IP!!!
+                POST(data, dn)
 
 
 def get_file_list_in_blocks(file):

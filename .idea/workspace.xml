@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9af42bba-1bd0-44c4-8cd3-b726bf8b87e5" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AWS_flask/DN.py" beforeDir="false" afterPath="$PROJECT_DIR$/AWS_flask/DN.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AWS_flask/NN.py" beforeDir="false" afterPath="$PROJECT_DIR$/AWS_flask/NN.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AWS_flask/client.py" beforeDir="false" afterPath="$PROJECT_DIR$/AWS_flask/client.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -17,8 +17,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/AWS_flask/DN.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="405">
-              <caret line="27" column="14" selection-start-line="27" selection-start-column="14" selection-end-line="27" selection-end-column="14" />
+            <state relative-caret-position="331">
+              <caret line="27" column="73" lean-forward="true" selection-start-line="27" selection-start-column="73" selection-end-line="27" selection-end-column="73" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
               </folding>
@@ -29,8 +29,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/AWS_flask/client.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1605">
-              <caret line="107" column="100" selection-start-line="107" selection-start-column="100" selection-end-line="107" selection-end-column="100" />
+            <state relative-caret-position="3661">
+              <caret line="295" lean-forward="true" selection-start-line="295" selection-end-line="295" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
@@ -41,8 +41,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/AWS_flask/NN.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="375">
-              <caret line="31" lean-forward="true" selection-start-line="31" selection-end-line="31" />
+            <state relative-caret-position="405">
+              <caret line="33" column="21" selection-start-line="33" selection-start-column="21" selection-end-line="33" selection-end-column="21" />
             </state>
           </provider>
         </entry>
@@ -53,6 +53,8 @@
     <findStrings>
       <find>image</find>
       <find>POST ERROR</find>
+      <find>POST</find>
+      <find>BB</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -64,14 +66,14 @@
         <option value="$PROJECT_DIR$/flaskImplementation/NN.py" />
         <option value="$USER_HOME$/PycharmProjects/flaskSUFS/venv/test.py" />
         <option value="$PROJECT_DIR$/AWS_flask/client.py" />
-        <option value="$PROJECT_DIR$/AWS_flask/DN.py" />
         <option value="$PROJECT_DIR$/AWS_flask/NN.py" />
+        <option value="$PROJECT_DIR$/AWS_flask/DN.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="1">
     <option name="y" value="22" />
-    <option name="width" value="1440" />
+    <option name="width" value="1045" />
     <option name="height" value="878" />
   </component>
   <component name="ProjectView">
@@ -132,10 +134,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="22" width="1440" height="878" extended-state="0" />
+    <frame x="394" y="22" width="1045" height="878" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.16701902" />
+      <window_info content_ui="combo" id="Project" order="0" weight="0.19899245" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -238,30 +240,30 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/AWS_flask/gb.txt" />
-    <entry file="file://$PROJECT_DIR$/AWS_flask/DN.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="405">
-          <caret line="27" column="14" selection-start-line="27" selection-start-column="14" selection-end-line="27" selection-end-column="14" />
-          <folding>
-            <element signature="e#0#38#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/AWS_flask/client.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1605">
-          <caret line="107" column="100" selection-start-line="107" selection-start-column="100" selection-end-line="107" selection-end-column="100" />
+        <state relative-caret-position="3661">
+          <caret line="295" lean-forward="true" selection-start-line="295" selection-end-line="295" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/AWS_flask/DN.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="331">
+          <caret line="27" column="73" lean-forward="true" selection-start-line="27" selection-start-column="73" selection-end-line="27" selection-end-column="73" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/AWS_flask/NN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="375">
-          <caret line="31" lean-forward="true" selection-start-line="31" selection-end-line="31" />
+        <state relative-caret-position="405">
+          <caret line="33" column="21" selection-start-line="33" selection-start-column="21" selection-end-line="33" selection-end-column="21" />
         </state>
       </provider>
     </entry>

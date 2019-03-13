@@ -12,7 +12,7 @@ parser = reqparse.RequestParser()
 parser.add_argument('file')
 
 # Global variables
-NN_addr = "http://:5000"                                               # TODO: insert NN IP ADDR HERE
+NN_addr = "http://18.237.165.71:5000"                                               # TODO: insert NN IP ADDR HERE
 port = 5000
 blockbeat = "/BB"
 err_code = 400
@@ -25,7 +25,7 @@ my_blocks = []
 # Threading variables
 dataLock = threading.Lock()                                             # Lock to control access to data
 yourThread = threading.Thread()                                         # Thread handler
-wait_time = 10                                                          # Time between blockbeats
+wait_time = 7                                                           # Time between blockbeats
 
 
 class data_from_NN(Resource):
