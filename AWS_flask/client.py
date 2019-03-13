@@ -6,7 +6,7 @@ from botocore.exceptions import ClientError
 
 
 # Global variables
-NN_addr = "http://:5000"                                                    # TODO: insert NN IP ADDR HERE
+NN_addr = "http://18.237.200.158:5000"                                                    # TODO: insert NN IP ADDR HERE
 s3 = boto3.resource('s3')                                                   # for accessing s3 on a write
 block_size = 64000000                                                       # 64 MB
 replication_factor = 3
@@ -60,16 +60,15 @@ def write_file():
         print("You must include the bucket and file.")
         return
 
-    bucket = path_list[0]                                                   # tested using 'dundermifflin-sufs'
+    bucket = path_list[0]
     filename = path_list[1]
     print("bucket ", bucket)
     print("path   ", filename)
     s3obj = s3.Object(bucket, filename)                                     # var that represents an s3 object
 
     try:
-        print("in the try before read")
+        print("Reading S3 object ...")
         image = s3obj.get()['Body'].read()
-        print("in try after the read")
 
     except ClientError as ex:
         print("ERROR: the s3 file path you entered is not valid.", ex)      # return if given invalid s3 file path
