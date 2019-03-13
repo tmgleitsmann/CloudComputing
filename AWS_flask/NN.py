@@ -72,7 +72,7 @@ class NN_server(Resource):
         # 1: create list of block ids
         blockid_list = []
         block_index = 0
-        filename = filename.strip("/")
+        filename = filename.replace("/", "")
         for i in range(0, filesize, block_size):
             blockid_list.append(filename + "_b" + str(block_index))
             block_index += 1
