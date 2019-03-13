@@ -1,4 +1,4 @@
-from flask import Flask,  make_response
+from flask import Flask, make_response
 from flask_restful import Api, Resource, reqparse, request
 import requests
 import simplejson as json
@@ -162,7 +162,7 @@ def check_bb_table():
             elapsed = datetime.datetime.now() - master_heartbeat_dict[DN_addr]
             print(DN_addr, " time elapsed -- ", elapsed)
             if elapsed > datetime.timedelta(seconds=wait_time):
-                print("\033[91m --> DN FAILURE: ", DN_addr, " has failed! No block report for time: ", elapsed, "\033[0m")
+                print("\033[91m --> DN FAILURE: ", DN_addr, " has failed! No block report for time: ",elapsed,"\033[0m")
                 failed_DN_list.append(DN_addr)
         print()
 
@@ -187,7 +187,6 @@ def check_bb_table():
                             for b1 in master_DNlists_dict[f1]:
                                 print("\tBlock: ", b1, " --> ", master_DNlists_dict[f1][b1])
                         print()
-
 
                         available_DNs_list = list(set(master_heartbeat_dict.keys()) - set(ip_list))
                         if len(available_DNs_list) == 0:

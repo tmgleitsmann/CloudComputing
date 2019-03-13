@@ -12,7 +12,7 @@ parser = reqparse.RequestParser()
 parser.add_argument('file')
 
 # Global variables
-NN_addr = "http://18.237.165.71:5000"                                               # TODO: insert NN IP ADDR HERE
+NN_addr = "http://:5000"                                               # TODO: insert NN IP ADDR HERE
 port = 5000
 blockbeat = "/BB"
 err_code = 400
@@ -41,10 +41,8 @@ class data_from_NN(Resource):
 
             with open(blockid, 'r') as myfile:
                 data = myfile.read()
-            # block_data = my_blocks[blockid]
             data_for_DN = {blockid: data}
 
-            # print("POST from NN: ", data)
             print("blockid:      ", blockid)
             print("addr:         ", addr)
             print("sending data of type ", type(data_for_DN))
@@ -75,8 +73,6 @@ class DN_server(Resource):
                 with open(blockid, 'r') as myfile:
                     data = myfile.read()
                 return make_response(data, 200)
-                # value = my_blocks[blockid]
-                # return value
 
             # Else, return ERROR
             else:
